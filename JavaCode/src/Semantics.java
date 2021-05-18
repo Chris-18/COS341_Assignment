@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 public class Semantics
@@ -48,6 +50,44 @@ public class Semantics
     {
         Node currNode = this.tree;
         recursivelyIterateThroughTreeAndChangeProcedureNames(currNode);
+        currNode = this.tree;
+        recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(currNode);
+    }
+
+    private boolean recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(Node currNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("INSTR") && currNode.getChildren().get(0).getNodeDetail().equals("CALL"))
+            {
+                Node child = currNode.getChildren().get(0);
+                return child.getChildren().get(0).getRowInTable().getNewName().equals("");
+            }
+            else if(currNode.getNodeDetail().equals("PROC_DEFS"))
+            {
+                Node proc = currNode.getChildren().get(0);
+                if(proc.getChildren().get(1).getRowInTable().getNewName().equals(""))
+                {
+                    return true;
+                }
+                else
+                {
+                    recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(proc.getChildren().get(2));
+                }
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    if(recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(currNode.getChildren().get(i)))
+                    {
+                        currNode.getChildren().remove(i);
+                        i--;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void recursivelyIterateThroughTreeAndChangeProcedureNames(Node currNode)
