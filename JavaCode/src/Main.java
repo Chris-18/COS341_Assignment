@@ -35,6 +35,10 @@ public class Main
                 {
                     System.out.println("Error: All user defined names in for loop are not the same.");
                 }
+                else if(semantics.checkForLoopRule2())
+                {
+                    System.out.println("Error: For loop user defined name changed within loop body.");
+                }
                 else
                 {
                     System.out.print(tree.printTree());
