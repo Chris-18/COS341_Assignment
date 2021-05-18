@@ -1,14 +1,16 @@
 n = m;
 checknumber;
+scope;
 halt;
 proc checknumber
 {
     m = x;
     newscope = x;
+    scope;
     for(newscope=0;newscope<newscope;newscope=add(newscope,1))
     {
-        n=newscope;
-        for(newscope=0;newscope<newscope;newscope=add(newscope,1))
+        n=test;
+        for(he=0;he<n;he=add(he,1))
         {
             x = "hello"
         }

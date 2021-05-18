@@ -23,6 +23,7 @@ public class Main
                 Vector<Row> Table = tree.buildSyntaxTable();
                 Semantics semantics = new Semantics(tree, Table);
                 semantics.changeTreeVariableNames();
+                semantics.changeTreeProcedureNames();
                 if(semantics.checkRuleP1())
                 {
                     System.out.println("Error:Procedure Call with User defined name.");

@@ -5,6 +5,7 @@ public class Semantics
     private Node tree = null;
     private Vector<Row> Table;
     private static int variableNameNumber = 0;
+    private static int procedureNameNumber = 0;
 
     public Semantics(Node tree, Vector<Row> Table)
     {
@@ -41,6 +42,77 @@ public class Semantics
     {
         Node currNode = tree;
         recursivelyIterateThroughTreeAndChangeVariableNames(currNode);
+    }
+
+    public void changeTreeProcedureNames()
+    {
+        Node currNode = this.tree;
+        recursivelyIterateThroughTreeAndChangeProcedureNames(currNode);
+    }
+
+    private void recursivelyIterateThroughTreeAndChangeProcedureNames(Node currNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("CALL"))
+            {
+                findMatchingProcedure(currNode.getChildren().get(0));
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    recursivelyIterateThroughTreeAndChangeProcedureNames(currNode.getChildren().get(i));
+                }
+            }
+        }
+    }
+
+    private void findMatchingProcedure(Node callNode)
+    {
+        Node currNode = this.tree;
+        recursivelyIterateToFindMatchingProcedure(currNode, callNode);
+    }
+
+    private void recursivelyIterateToFindMatchingProcedure(Node currNode, Node callNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("PROC"))
+            {
+                if(currNode.getChildren().get(1).getNodeDetail().equals(callNode.getNodeDetail()))
+                {
+                    if(currNode.getRowInTable().getScope().length() == callNode.getRowInTable().getScope().length() + 2)
+                    {
+                        if(currNode.getRowInTable().getNewName().equals(""))
+                        {
+                            currNode.getChildren().get(1).getRowInTable().setNewName("p" + procedureNameNumber);
+                            callNode.getRowInTable().setNewName("p" + procedureNameNumber);
+                            procedureNameNumber++;
+                        }
+                        else
+                        {
+                            callNode.getRowInTable().setNewName(currNode.getRowInTable().getNewName());
+                        }
+                    }
+                    else
+                    {
+                        recursivelyIterateToFindMatchingProcedure(currNode.getChildren().get(2), callNode);
+                    }
+                }
+                else
+                {
+                    recursivelyIterateToFindMatchingProcedure(currNode.getChildren().get(2), callNode);
+                }
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    recursivelyIterateToFindMatchingProcedure(currNode.getChildren().get(i), callNode);
+                }
+            }
+        }
     }
 
     private void recursivelyIterateThroughTreeAndChangeVariableNames(Node currNode)
