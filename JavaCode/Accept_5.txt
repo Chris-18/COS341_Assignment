@@ -1,0 +1,8 @@
+a = scope0 ;
+b = "scope0" ;
+u = scope0 ;
+a = add(sub(17,scope0),12) ;
+scope0 = 726 ;
+y = scope0 ;
+x = "scope0" ;
+scope0

@@ -1,0 +1,49 @@
+output(scope0);
+if(eq(eq((cos341<cos341),
+eq(not (cos341<cos341),
+(cos341<cos341))),
+not and((cos341<cos341),
+(cos341<cos341)))) then 
+{ if(eq(eq((cos341<cos341),
+eq(not (cos341<cos341),
+(cos341<cos341))),
+not and((cos341<cos341),
+(cos341<cos341)))) then 
+{ output(scope0) } else { 
+if(eq(eq((cos341<cos341),
+eq(not (cos341<cos341),
+(cos341<cos341))),
+not and((cos341<cos341),
+(cos341<cos341)))) then 
+{ if(eq(eq((cos341<cos341),
+eq(not (cos341<cos341),
+(cos341<cos341))),not 
+and((cos341<cos341),
+(cos341<cos341)))) 
+then { output(scope0) } else 
+{ output(scope0) } } } } ; 
+if(eq(eq((cos341<cos341),
+eq(not (cos341<cos341),
+(cos341<cos341))),not 
+and((cos341<cos341),
+(cos341<cos341)))) then 
+{ if(eq(eq((cos341<cos341),
+eq(not (cos341<cos341),
+(cos341<cos341))),
+not and((cos341<cos341),
+(cos341<cos341)))) then 
+{ output(scope0) } else { 
+if(eq(eq((cos341<cos341),
+eq(not (cos341<cos341),
+(cos341<cos341))),not 
+and((cos341<cos341),
+(cos341<cos341)))) 
+then { 
+if(eq(eq((cos341<cos341),
+eq(not (cos341<cos341),
+(cos341<cos341))),
+not and((cos341<cos341),
+(cos341<cos341)))) then 
+{ output(scope0) } else 
+{ output(scope0) } } } } ;
+output(scope0)

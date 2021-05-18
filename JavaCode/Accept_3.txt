@@ -1,0 +1,6 @@
+while(eq(mult(mynumber,97),mult(mynumber,98))) { scope0; 
+while(eq(mult(mynumber,97),mult(mynumber,98))) { scope0;
+while(eq(mult(mynumber,97),mult(mynumber,98))) { scope0;
+while(eq(mult(mynumber,97),mult(mynumber,98))) { scope0;
+while(eq(mult(mynumber,97),mult(mynumber,98))) { scope0; scope0 } } } } } ;
+scope0

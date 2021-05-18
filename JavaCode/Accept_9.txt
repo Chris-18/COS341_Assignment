@@ -1,0 +1,23 @@
+x = scope0;
+for(outerforscope=0; outerforscope<outerforscope; outerforscope=add(outerforscope,1)) 
+   { outerforscope=outerforscope;
+     while(eq(outerforscope,outerforscope)) 
+          { outerforscope; 
+            for(newscope=0;newscope<newscope;newscope=add(newscope,1)){ n=newscope }; 
+            v=outerforscope; 
+            for(otherscope=0;otherscope<otherscope;otherscope=add(otherscope,1)){ o=otherscope }; 
+            outerforscope=z } ; outerforscope } ;
+y = scope0 ;
+proc deeperscope { d=deeperscope;
+                   for(deeperforscope=0; deeperforscope<deeperforscope; deeperforscope=add(deeperforscope,1)) 
+                      { deeperforscope=deeperforscope;
+                        while(eq(deeperforscope,deeperforscope)) 
+                             { deeperforscope; 
+                               for(innerforcope=0;innerforcope<innerforscope;innerforscope=add(innerforscope,1)) 
+                                  { i=innerforscope }; 
+                               d=deeperforscope; 
+                               for(anotherscope=0;anotherscope<anotherscope;anotherscope=add(anotherscope,1))
+                                  { a=anotherscope }; 
+                               deeperforscope=z } ; 
+                        f=deeperforscope } ;
+                   d=deeperscope }

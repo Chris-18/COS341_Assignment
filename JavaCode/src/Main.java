@@ -2,7 +2,7 @@ public class Main
 {
     public static void main(String[] args)
     {
-        Lexer lexer = new Lexer("test.txt");
+        Lexer lexer = new Lexer("Accept_0.txt");
         Token result = lexer.lex();
         if(result.getType().equals("Lexical Error") || result.getType().equals("File Error"))
         {
@@ -10,9 +10,6 @@ public class Main
         }
         else
         {
-            System.out.println("Go to parser.");
-            System.out.println(lexer.getTokens(result));
-            System.out.println();
             Parser parser = new Parser(result);
             Node tree = parser.parse();
             if(tree.getUid() == -1)
@@ -21,8 +18,8 @@ public class Main
             }
             else
             {
-                System.out.println("Print tree");
-                System.out.println(tree.printTree());
+                System.out.print(tree.printTree());
+                //System.out.print(tree.printTreeWithNoNewLines());
             }
         }
     }

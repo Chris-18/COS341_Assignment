@@ -1,11 +1,19 @@
+import java.util.Vector;
+
 public class Parser
 {
+    //private variables
     private final Token Head;
     private Boolean Error = false;
     private Token ErrorToken = null;
     private boolean ErrorDeclared = false;
     private int nextUid = 0;
     private Node SyntaxTree;
+    private int innerBoolCount = 0;
+    private Vector<Row> Table = new Vector<Row>();
+    private Integer scopeValue = 0;
+
+    //Public Methods.
 
     public Parser(Token Head)
     {
@@ -16,21 +24,32 @@ public class Parser
     {
         if(Head == null)
         {
-            this.Error = true;
-            String errorMsg = "No tokens present.";
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
+            buildAndDeclareError("No tokens present.");
         }
         else
         {
             //add prog to tree
-            SyntaxTree = new Node(this.nextUid, "Non-Terminal", "PROG");
+            this.SyntaxTree = new Node(this.nextUid, "Non-Terminal", "PROG");
             this.nextUid++;
 
             parseCode(this.Head, this.SyntaxTree);
         }
 
         return this.SyntaxTree;
+    }
+
+
+
+    //Private Helper functions.
+
+    private Token parseProg(Token currToken, Node currNode)
+    {
+        Node newNode = new Node(this.nextUid, "Non-Terminal", "PROG");
+        this.nextUid++;
+        currNode.addChild(newNode);
+
+        currToken = parseCode(currToken, newNode);
+        return currToken;
     }
 
     private Token parseCode(Token currToken, Node currNode)
@@ -42,12 +61,7 @@ public class Parser
             this.nextUid++;
 
             currToken = decideWhichParseRouteToTake(currToken, newNode);
-            if(Error)
-            {
-                //display error
-                return null;
-            }
-            else if(currToken == null)
+            if(Error || currToken == null)
             {
                 return null;
             }
@@ -65,11 +79,78 @@ public class Parser
             }
             else
             {
-                this.Error = true;
-                String errorMsg = "Grouping character: ; expected after CODE";
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
+                return buildAndDeclareError("Grouping character: ; expected after CODE");
+            }
+        }
+
+        Node mainNode = currNode;
+
+        while(currToken.getValue().equals("proc"))
+        {
+            Node newNode = new Node(this.nextUid, "Non-Terminal", "PROC_DEFS");
+            mainNode.addChild(newNode);
+            this.nextUid++;
+            currNode = newNode;
+
+            newNode = new Node(this.nextUid, "Non-Terminal", "PROC");
+            currNode.addChild(newNode);
+            this.nextUid++;
+            currNode = newNode;
+
+            newNode = new Node(this.nextUid, "Terminal", "proc");
+            currNode.addChild(newNode);
+            this.nextUid++;
+
+            Token prevToken = currToken;
+            currToken = currToken.getNext();
+            if(currToken == null)
+            {
+                return buildAndDeclareError("User defined name expected after proc.");
+            }
+            else if(currToken.getType().equals("User defined name"))
+            {
+                newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                currNode.addChild(newNode);
+                this.nextUid++;
+
+                prevToken = currToken;
+                currToken = currToken.getNext();
+                if(currToken == null)
+                {
+                    return buildAndDeclareError("Grouping character: \"{\" expected after User defined name in PROC declaration.");
+                }
+                else if(currToken.getValue().equals("{"))
+                {
+                    prevToken = currToken;
+                    currToken = currToken.getNext();
+
+                    currToken = parseProg(currToken, currNode);
+                    if(currToken == null)
+                    {
+                        return buildAndDeclareError("Grouping character: \"}\" expected after User defined name in PROC declaration.");
+                    }
+                    else if(currToken.getValue().equals("}"))
+                    {
+                        currToken = currToken.getNext();
+                    }
+                    else
+                    {
+                        return buildAndDeclareError("Grouping character: \"}\" expected after User defined name in PROC declaration.");
+                    }
+                }
+                else
+                {
+                    return buildAndDeclareError("Grouping character: \"{\" expected after User defined name in PROC declaration.");
+                }
+            }
+            else
+            {
+                return buildAndDeclareError("User defined name expected after proc.");
+            }
+
+            if(currToken == null)
+            {
+                break;
             }
         }
         return currToken;
@@ -131,11 +212,7 @@ public class Parser
         currToken = currToken.getNext();
         if(currToken == null)
         {
-            this.Error = true;
-            String errorMsg = "Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue();
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
-            return null;
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in IO command.");
         }
         if(currToken.getValue().equals("("))
         {
@@ -143,11 +220,7 @@ public class Parser
             currToken = currToken.getNext();
             if(currToken == null)
             {
-                this.Error = true;
-                String errorMsg = "User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue();
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
+                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in IO command.");
             }
             if(currToken.getType().equals("User defined name"))
             {
@@ -155,11 +228,7 @@ public class Parser
                 currToken = currToken.getNext();
                 if(currToken == null)
                 {
-                    this.Error = true;
-                    String errorMsg = "Grouping character: ) expected after " + prevToken.getType() + ": " + prevToken.getValue();
-                    this.ErrorToken = new Token("Parser Error", errorMsg);
-                    declareError();
-                    return null;
+                    return buildAndDeclareError("Grouping character: ) expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in IO command.");
                 }
                 if(currToken.getValue().equals(")"))
                 {
@@ -171,29 +240,17 @@ public class Parser
                 }
                 else
                 {
-                    this.Error = true;
-                    String errorMsg = "Grouping character: ) expected after " + prevToken.getType() + ": " + prevToken.getValue();
-                    this.ErrorToken = new Token("Parser Error", errorMsg);
-                    declareError();
-                    return null;
+                    return buildAndDeclareError("Grouping character: ) expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in IO command.");
                 }
             }
             else
             {
-                this.Error = true;
-                String errorMsg = "User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue();
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
+                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in IO command.");
             }
         }
         else
         {
-            this.Error = true;
-            String errorMsg = "Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue();
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
-            return null;
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in IO command.");
         }
 
         return currToken;
@@ -233,11 +290,7 @@ public class Parser
             currToken = currToken.getNext();
             if(currToken == null)
             {
-                this.Error = true;
-                String errorMsg = "String, Variable or number expression expected after " + prevToken.getType() + ": " + prevToken.getValue();
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
+                return buildAndDeclareError("String, Variable or number expression expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in assignment command.");
             }
             else if(currToken.getType().equals("Short String") ||
                     currToken.getType().equals("User defined name") ||
@@ -246,8 +299,15 @@ public class Parser
             {
                 switch (currToken.getType())
                 {
-                    case "Short String", "Number", "User defined name" -> {
+                    case "Short String" -> {
                         //add short string
+                        newNode = new Node(this.nextUid, "Terminal", "\"" + currToken.getValue() + "\"");
+                        currNode.addChild(newNode);
+                        this.nextUid++;
+
+                        currToken = currToken.getNext();
+                    }
+                    case "Number", "User defined name" -> {
                         newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
                         currNode.addChild(newNode);
                         this.nextUid++;
@@ -266,11 +326,7 @@ public class Parser
             }
             else
             {
-                this.Error = true;
-                String errorMsg = "String, Variable or number expression expected after " + prevToken.getType() + ": " + prevToken.getValue();
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
+                return buildAndDeclareError("String, Variable or number expression expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in assignment command.");
             }
         }
         else
@@ -293,11 +349,7 @@ public class Parser
         currToken = currToken.getNext();
         if(currToken == null)
         {
-            this.Error = true;
-            String errorMsg = "Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue();
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
-            return null;
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in Number expression.");
         }
         else if(currToken.getValue().equals("("))
         {
@@ -315,11 +367,7 @@ public class Parser
                 currToken = innerNumberExpression(currToken, currNode);
                 if(currToken == null)
                 {
-                    this.Error = true;
-                    String errorMsg = "Grouping character: ) expected after Number expression";
-                    this.ErrorToken = new Token("Parser Error", errorMsg);
-                    declareError();
-                    return null;
+                    return buildAndDeclareError("Grouping character: ) expected after Number expression");
                 }
                 else if(currToken.getValue().equals(")"))
                 {
@@ -328,29 +376,17 @@ public class Parser
                 }
                 else
                 {
-                    this.Error = true;
-                    String errorMsg = "Grouping character: ) expected after Number expression";
-                    this.ErrorToken = new Token("Parser Error", errorMsg);
-                    declareError();
-                    return null;
+                    return buildAndDeclareError("Grouping character: ) expected after Number expression");
                 }
             }
             else
             {
-                this.Error = true;
-                String errorMsg = "Grouping character: , expected after Number expression";
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
+                return buildAndDeclareError("Grouping character: , expected after Number expression.");
             }
         }
         else
         {
-            this.Error = true;
-            String errorMsg = "Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue();
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
-            return null;
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in Number expression.");
         }
         return currToken;
     }
@@ -363,11 +399,7 @@ public class Parser
         currToken = currToken.getNext();
         if(currToken == null)
         {
-            this.Error = true;
-            String errorMsg = "Variable name, Number or Number expression expected after " + prevToken.getType() + ": " + prevToken.getValue();
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
-            return null;
+            return buildAndDeclareError("Variable name, Number or Number expression expected after " + prevToken.getType() + ": " + prevToken.getValue() + "in number expression.");
         }
         else if(currToken.getType().equals("User defined name") || currToken.getType().equals("Number") || currToken.getType().equals("Number operators"))
         {
@@ -392,11 +424,7 @@ public class Parser
         }
         else
         {
-            this.Error = true;
-            String errorMsg = "Variable name, Number or Number expression expected after " + prevToken.getType() + ": " + prevToken.getValue();
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
-            return null;
+            return buildAndDeclareError("Variable name, Number or Number expression expected after " + prevToken.getType() + ": " + prevToken.getValue() + "in number expression.");
         }
         return currToken;
     }
@@ -449,11 +477,7 @@ public class Parser
         currToken = currToken.getNext();
         if(currToken == null)
         {
-            this.Error = true;
-            String errorMsg = "Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue();
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
-            return null;
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in if statement.");
         }
         else if(currToken.getValue().equals("("))
         {
@@ -464,11 +488,7 @@ public class Parser
             currToken = outerBoolRoute(currToken, newNode);
             if(currToken == null)
             {
-                this.Error = true;
-                String errorMsg = "Grouping character: ) expected.";
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
+                return buildAndDeclareError("Grouping character: ) expected in if statement.");
             }
             else if(currToken.getValue().equals(")"))
             {
@@ -476,11 +496,7 @@ public class Parser
                 currToken = currToken.getNext();
                 if(currToken == null)
                 {
-                    this.Error = true;
-                    String errorMsg = "Control structure keyword: \"then\" expected.";
-                    this.ErrorToken = new Token("Parser Error", errorMsg);
-                    declareError();
-                    return null;
+                    return  buildAndDeclareError("Control structure keyword: \"then\" expected in the if statement.");
                 }
                 else if(currToken.getValue().equals("then"))
                 {
@@ -492,11 +508,7 @@ public class Parser
                     currToken = currToken.getNext();
                     if(currToken == null)
                     {
-                        this.Error = true;
-                        String errorMsg = "Grouping character: \"{\" expected after Control structure keyword: \"then\".";
-                        this.ErrorToken = new Token("Parser Error", errorMsg);
-                        declareError();
-                        return null;
+                        return buildAndDeclareError("Grouping character: \"{\" expected after Control structure keyword: \"then\" in the if statement.");
                     }
                     else if(currToken.getValue().equals("{"))
                     {
@@ -504,83 +516,427 @@ public class Parser
                         currToken = currToken.getNext();
                         if(currToken == null)
                         {
-                            this.Error = true;
-                            String errorMsg = "Expected CODE after Grouping character: \"{\"";
-                            this.ErrorToken = new Token("Parser Error", errorMsg);
-                            declareError();
-                            return null;
+                            return buildAndDeclareError("Expected CODE after Grouping character: \"{\" in the if statement.");
                         }
                         else
                         {
                             currToken = parseCode(currToken, currNode);
                             if(currToken == null)
                             {
-                                this.Error = true;
-                                String errorMsg = "Grouping character: \"}\" expected after CODE";
-                                this.ErrorToken = new Token("Parser Error", errorMsg);
-                                declareError();
-                                return null;
+                                return buildAndDeclareError("Grouping character: \"}\" expected after CODE in the if statement.");
                             }
                             else if(currToken.getValue().equals("}"))
                             {
+                                prevToken = currToken;
                                 currToken = currToken.getNext();
+                                if(currToken == null)
+                                {
+                                    return prevToken;
+                                }
+                                else if(currToken.getValue().equals("else"))
+                                {
+                                    newNode = new Node(this.nextUid, "Terminal", "else");
+                                    this.nextUid++;
+                                    currNode.addChild(newNode);
+
+                                    currToken = innerConditionCode(currToken, currNode);
+                                }
+                                else
+                                {
+                                    return currToken;
+                                }
                             }
                             else
                             {
-                                this.Error = true;
-                                String errorMsg = "Grouping character: \"}\" expected after CODE";
-                                this.ErrorToken = new Token("Parser Error", errorMsg);
-                                declareError();
-                                return null;
+                                return buildAndDeclareError("Expected CODE after Grouping character: \"{\" in the if statement.");
                             }
                         }
                     }
                     else
                     {
-                        this.Error = true;
-                        String errorMsg = "Grouping character: \"{\" expected after Control structure keyword: \"then\".";
-                        this.ErrorToken = new Token("Parser Error", errorMsg);
-                        declareError();
-                        return null;
+                        return buildAndDeclareError("Grouping character: \"{\" expected after Control structure keyword: \"then\" in the if statement.");
                     }
                 }
                 else
                 {
-                    this.Error = true;
-                    String errorMsg = "Control structure keyword: \"then\" expected.";
-                    this.ErrorToken = new Token("Parser Error", errorMsg);
-                    declareError();
-                    return null;
+                    return buildAndDeclareError("Control structure keyword: \"then\" expected in the if statement.");
                 }
             }
             else
             {
-                this.Error = true;
-                String errorMsg = "Grouping character: ) expected.";
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
+                return buildAndDeclareError("Grouping character: ) expected in if statement.");
             }
         }
         else
         {
-            this.Error = true;
-            String errorMsg = "Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue();
-            this.ErrorToken = new Token("Parser Error", errorMsg);
-            declareError();
-            return null;
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in if statement.");
         }
         return currToken;
     }
 
     private Token whileRoute(Token currToken, Node currNode)
     {
-        return null;
+        Node newNode;
+        Token prevToken = currToken;
+        currToken = currToken.getNext();
+        if(currToken == null)
+        {
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in while loop.");
+        }
+        else if(currToken.getValue().equals("("))
+        {
+            newNode = new Node(this.nextUid, "Non-Terminal", "BOOL");
+            this.nextUid++;
+            currNode.addChild(newNode);
+
+            currToken = outerBoolRoute(currToken, newNode);
+            if(currToken == null)
+            {
+                return buildAndDeclareError("Grouping character: ) expected in while loop.");
+            }
+            else if(currToken.getValue().equals(")"))
+            {
+                currToken = innerConditionCode(currToken, currNode);
+            }
+            else
+            {
+                return buildAndDeclareError("Grouping character: ) expected in while loop.");
+            }
+        }
+        else
+        {
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue() + " in while loop.");
+        }
+
+        return currToken;
     }
 
     private Token forRoute(Token currToken, Node currNode)
     {
-        return null;
+        Node newNode;
+        Node newNodeNonTerminal = new Node(this.nextUid, "Non-Terminal", "ASSIGN");
+        this.nextUid++;
+        currNode.addChild(newNodeNonTerminal);
+
+        Token prevToken = currToken;
+        currToken =currToken.getNext();
+        if(currToken == null)
+        {
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue());
+        }
+        else if(currToken.getValue().equals("("))
+        {
+            prevToken = currToken;
+            currToken = currToken.getNext();
+            if(currToken == null)
+            {
+                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+            }
+            else if(currToken.getType().equals("User defined name"))
+            {
+                newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                this.nextUid++;
+                newNodeNonTerminal.addChild(newNode);
+
+                prevToken = currToken;
+                currToken = currToken.getNext();
+                if(currToken == null)
+                {
+                    return buildAndDeclareError("Assignment character: \"=\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                }
+                else if(currToken.getValue().equals("="))
+                {
+                    prevToken = currToken;
+                    currToken = currToken.getNext();
+                    if(currToken == null)
+                    {
+                        return buildAndDeclareError("Number character expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                    }
+                    else if(currToken.getType().equals("Number"))
+                    {
+                        newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                        this.nextUid++;
+                        newNodeNonTerminal.addChild(newNode);
+
+                        newNodeNonTerminal = new Node(this.nextUid, "Non-Terminal", "BOOL");
+                        this.nextUid++;
+                        currNode.addChild(newNodeNonTerminal);
+
+                        prevToken = currToken;
+                        currToken = currToken.getNext();
+                        if(currToken == null)
+                        {
+                            return buildAndDeclareError("Grouping character: \";\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                        }
+                        else if(currToken.getValue().equals(";"))
+                        {
+                            prevToken = currToken;
+                            currToken = currToken.getNext();
+                            if(currToken == null)
+                            {
+                                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                            }
+                            else if(currToken.getType().equals("User defined name"))
+                            {
+                                newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                                this.nextUid++;
+                                newNodeNonTerminal.addChild(newNode);
+
+                                prevToken = currToken;
+                                currToken = currToken.getNext();
+                                if(currToken == null)
+                                {
+                                    return buildAndDeclareError("Comparison character: \"<\" or \">\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                }
+                                else if(currToken.getValue().equals("<") || currToken.getValue().equals(">"))
+                                {
+                                    newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                                    this.nextUid++;
+                                    newNodeNonTerminal.addChild(newNode);
+
+                                    prevToken = currToken;
+                                    currToken = currToken.getNext();
+                                    if(currToken == null)
+                                    {
+                                        return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                    }
+                                    else if(currToken.getType().equals("User defined name"))
+                                    {
+                                        newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                                        this.nextUid++;
+                                        newNodeNonTerminal.addChild(newNode);
+
+                                        newNodeNonTerminal = new Node(this.nextUid, "Non-Terminal", "ASSIGN");
+                                        this.nextUid++;
+                                        currNode.addChild(newNodeNonTerminal);
+
+                                        prevToken = currToken;
+                                        currToken = currToken.getNext();
+                                        if(currToken == null)
+                                        {
+                                            return buildAndDeclareError("Grouping character: \";\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                        }
+                                        else if(currToken.getValue().equals(";"))
+                                        {
+                                            prevToken = currToken;
+                                            currToken = currToken.getNext();
+                                            if(currToken == null)
+                                            {
+                                                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                            }
+                                            else if(currToken.getType().equals("User defined name"))
+                                            {
+                                                newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                                                this.nextUid++;
+                                                newNodeNonTerminal.addChild(newNode);
+
+                                                prevToken = currToken;
+                                                currToken = currToken.getNext();
+                                                if(currToken == null)
+                                                {
+                                                    return buildAndDeclareError("Assignment character: \"=\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                }
+                                                else if(currToken.getValue().equals("="))
+                                                {
+                                                    Node assignmentNonTerminalNode = new Node(this.nextUid, "Non-Terminal", "CALC");
+                                                    this.nextUid++;
+                                                    newNodeNonTerminal.addChild(assignmentNonTerminalNode);
+
+                                                    prevToken = currToken;
+                                                    currToken = currToken.getNext();
+                                                    if(currToken == null)
+                                                    {
+                                                        return buildAndDeclareError("Number expression \"add\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                    }
+                                                    else if(currToken.getValue().equals("add"))
+                                                    {
+                                                        newNode = new Node(this.nextUid, "Terminal", "add");
+                                                        this.nextUid++;
+                                                        assignmentNonTerminalNode.addChild(newNode);
+
+                                                        prevToken = currToken;
+                                                        currToken = currToken.getNext();
+                                                        if(currToken == null)
+                                                        {
+                                                            return buildAndDeclareError("Grouping character: \"(\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                        }
+                                                        else if(currToken.getValue().equals("("))
+                                                        {
+                                                            prevToken = currToken;
+                                                            currToken = currToken.getNext();
+                                                            if(currToken == null)
+                                                            {
+                                                                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                            }
+                                                            else if(currToken.getType().equals("User defined name"))
+                                                            {
+                                                                newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                                                                this.nextUid++;
+                                                                assignmentNonTerminalNode.addChild(newNode);
+
+                                                                prevToken = currToken;
+                                                                currToken = currToken.getNext();
+                                                                if (currToken == null)
+                                                                {
+                                                                    return buildAndDeclareError("Grouping character: \",\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                                }
+                                                                else if(currToken.getValue().equals(","))
+                                                                {
+                                                                    currToken = innerNumberExpression(currToken, assignmentNonTerminalNode);
+                                                                    if(currToken == null)
+                                                                    {
+                                                                        return buildAndDeclareError("Grouping character: \")\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                                    }
+                                                                    else if(currToken.getValue().equals(")"))
+                                                                    {
+                                                                        prevToken = currToken;
+                                                                        currToken = currToken.getNext();
+                                                                        if(currToken == null)
+                                                                        {
+                                                                            return buildAndDeclareError("Grouping character: \")\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                                        }
+                                                                        else if(currToken.getValue().equals(")"))
+                                                                        {
+                                                                            currToken = innerConditionCode(currToken, currNode);
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            return buildAndDeclareError("Grouping character: \")\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                                        }
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        return buildAndDeclareError("Grouping character: \")\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    return buildAndDeclareError("Grouping character: \",\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            return buildAndDeclareError("Grouping character: \"(\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        return buildAndDeclareError("Number expression \"add\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    return buildAndDeclareError("Assignment character: \"=\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                                }
+                                            }
+                                            else
+                                            {
+                                                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                            }
+                                        }
+                                        else
+                                        {
+                                            return buildAndDeclareError("Grouping character: \";\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                        }
+                                    }
+                                    else
+                                    {
+                                        return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                    }
+                                }
+                                else
+                                {
+                                    return buildAndDeclareError("Comparison character: \"<\" or \">\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                                }
+                            }
+                            else
+                            {
+                                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                            }
+                        }
+                        else
+                        {
+                            return buildAndDeclareError("Grouping character: \";\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                        }
+                    }
+                    else
+                    {
+                        return buildAndDeclareError("Number character expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                    }
+                }
+                else
+                {
+                    return buildAndDeclareError("Assignment character: \"=\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+                }
+            }
+            else
+            {
+                return buildAndDeclareError("User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue());
+            }
+        }
+        else
+        {
+            return buildAndDeclareError("Grouping character: ( expected after " + prevToken.getType() + ": " + prevToken.getValue());
+        }
+
+        return currToken;
+    }
+
+    private Token innerConditionCode(Token currToken, Node currNode)
+    {
+        Token prevToken = currToken;
+        currToken = currToken.getNext();
+        if(currToken == null)
+        {
+            return buildAndDeclareError("Grouping character: \"{\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+        }
+        else if(currToken.getValue().equals("{"))
+        {
+            prevToken = currToken;
+            currToken = currToken.getNext();
+            if(currToken == null)
+            {
+                this.Error = true;
+                String errorMsg = "Expected CODE after Grouping character: \"{\"";
+                this.ErrorToken = new Token("Parser Error", errorMsg);
+                declareError();
+                return null;
+            }
+            else
+            {
+                currToken = parseCode(currToken, currNode);
+                if(currToken == null)
+                {
+                    this.Error = true;
+                    String errorMsg = "Grouping character: \"}\" expected after CODE";
+                    this.ErrorToken = new Token("Parser Error", errorMsg);
+                    declareError();
+                    return null;
+                }
+                else if(currToken.getValue().equals("}"))
+                {
+                    currToken = currToken.getNext();
+                }
+                else
+                {
+                    this.Error = true;
+                    String errorMsg = "Grouping character: \"}\" expected after CODE";
+                    this.ErrorToken = new Token("Parser Error", errorMsg);
+                    declareError();
+                    return null;
+                }
+            }
+        }
+        else
+        {
+            return buildAndDeclareError("Grouping character: \"{\" expected after " + prevToken.getType() + ": " + prevToken.getValue());
+        }
+        return currToken;
     }
 
     private Token outerBoolRoute(Token currToken, Node currNode)
@@ -697,7 +1053,7 @@ public class Parser
             {
                 switch (currToken.getType())
                 {
-                    case "User defined name" -> {
+                    case "User defined name", "Number" -> {
                         newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
                         this.nextUid++;
                         currNode.addChild(newNode);
@@ -717,72 +1073,34 @@ public class Parser
                             if (currToken == null)
                             {
                                 this.Error = true;
-                                String errorMsg = "Expected User defined name";
+                                String errorMsg = "Expected User defined name, Number or Number Expression.";
                                 this.ErrorToken = new Token("Parser Error", errorMsg);
                                 declareError();
                                 return null;
                             }
-                            else if (currToken.getType().equals("User defined name"))
+                            else if (currToken.getType().equals("User defined name") || currToken.getType().equals("Number") || currToken.getType().equals("Number operators"))
                             {
-                                newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
-                                this.nextUid++;
-                                currNode.addChild(newNode);
+                                switch (currToken.getType())
+                                {
+                                    case "User defined name", "Number" -> {
+                                        newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                                        this.nextUid++;
+                                        currNode.addChild(newNode);
 
-                                currToken = currToken.getNext();
-                            } else
-                            {
-                                this.Error = true;
-                                String errorMsg = "Expected User defined name";
-                                this.ErrorToken = new Token("Parser Error", errorMsg);
-                                declareError();
-                                return null;
-                            }
-                        } else
-                        {
-                            this.Error = true;
-                            String errorMsg = "Grouping character: , expected after " + prevToken.getType() + ": " + prevToken.getValue();
-                            this.ErrorToken = new Token("Parser Error", errorMsg);
-                            declareError();
-                            return null;
-                        }
-                    }
-                    case "Number" -> {
-                        newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
-                        this.nextUid++;
-                        currNode.addChild(newNode);
-                        prevToken = currToken;
-                        currToken = currToken.getNext();
-                        if (currToken == null)
-                        {
-                            this.Error = true;
-                            String errorMsg = "Grouping character: , expected after " + prevToken.getType() + ": " + prevToken.getValue();
-                            this.ErrorToken = new Token("Parser Error", errorMsg);
-                            declareError();
-                            return null;
-                        } else if (currToken.getValue().equals(","))
-                        {
-                            prevToken = currToken;
-                            currToken = currToken.getNext();
-                            if (currToken == null)
-                            {
-                                this.Error = true;
-                                String errorMsg = "Expected Number";
-                                this.ErrorToken = new Token("Parser Error", errorMsg);
-                                declareError();
-                                return null;
-                            }
-                            else if (currToken.getType().equals("Number"))
-                            {
-                                newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
-                                this.nextUid++;
-                                currNode.addChild(newNode);
-
-                                currToken = currToken.getNext();
+                                        currToken = currToken.getNext();
+                                    }
+                                    case "Number operators" -> {
+                                        newNode = new Node(this.nextUid, "Non-Terminal", "CALC");
+                                        this.nextUid++;
+                                        currNode.addChild(newNode);
+                                        currToken = outerNumberExpression(currToken, newNode);
+                                    }
+                                }
                             }
                             else
                             {
                                 this.Error = true;
-                                String errorMsg = "Expected Number";
+                                String errorMsg = "Expected User defined name, Number or Number expression.";
                                 this.ErrorToken = new Token("Parser Error", errorMsg);
                                 declareError();
                                 return null;
@@ -1007,73 +1325,95 @@ public class Parser
         if(currToken == null)
         {
             this.Error = true;
-            String errorMsg = "User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
+            String errorMsg = "User defined name, Number or Number Operator expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
             this.ErrorToken = new Token("Parser Error", errorMsg);
             declareError();
             return null;
         }
-        else if(currToken.getType().equals("User defined name"))
+        else if(currToken.getType().equals("User defined name") || currToken.getType().equals("Number") || currToken.getType().equals("Number operators"))
         {
-            newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
-            this.nextUid++;
-            currNode.addChild(newNode);
-
-            prevToken = currToken;
-            currToken = currToken.getNext();
-            if(currToken == null)
+            switch (currToken.getType())
             {
-                this.Error = true;
-                String errorMsg = "Comparison character: \"<\" or \">\" expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
-            }
-            else if(currToken.getValue().equals("<") || currToken.getValue().equals(">"))
-            {
-                newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
-                this.nextUid++;
-                currNode.addChild(newNode);
-
-                prevToken = currToken;
-                currToken = currToken.getNext();
-                if(currToken == null)
-                {
-                    this.Error = true;
-                    String errorMsg = "User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
-                    this.ErrorToken = new Token("Parser Error", errorMsg);
-                    declareError();
-                    return null;
-                }
-                else if(currToken.getType().equals("User defined name"))
-                {
+                case "User defined name", "Number" ->{
                     newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
                     this.nextUid++;
                     currNode.addChild(newNode);
 
-                    currToken = currToken.getNext();
+                    prevToken = currToken;
+                    if(innerBoolCount == 0)
+                    {
+                        currToken = currToken.getNext();
+                        if(currToken == null)
+                        {
+                            this.Error = true;
+                            String errorMsg = "Comparison character: \"<\" or \">\" expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
+                            this.ErrorToken = new Token("Parser Error", errorMsg);
+                            declareError();
+                            return null;
+                        }
+                        else if(currToken.getValue().equals("<") || currToken.getValue().equals(">"))
+                        {
+                            newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                            this.nextUid++;
+                            currNode.addChild(newNode);
+
+                            prevToken = currToken;
+                            innerBoolCount++;
+                            currToken = innerBoolRoute(prevToken, currNode);
+                        }
+                        else
+                        {
+                            this.Error = true;
+                            String errorMsg = "Comparison character: \"<\" or \">\" expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
+                            this.ErrorToken = new Token("Parser Error", errorMsg);
+                            declareError();
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        innerBoolCount = 0;
+                        currToken = currToken.getNext();
+                    }
                 }
-                else
-                {
-                    this.Error = true;
-                    String errorMsg = "User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
-                    this.ErrorToken = new Token("Parser Error", errorMsg);
-                    declareError();
-                    return null;
+                case "Number operators" ->{
+                    newNode = new Node(this.nextUid, "Non-Terminal", "CALC");
+                    this.nextUid++;
+                    currNode.addChild(newNode);
+
+                    currToken = outerNumberExpression(currToken, newNode);
+                    if(innerBoolCount == 0)
+                    {
+                        if(currToken == null)
+                        {
+                            return buildAndDeclareError("Comparison character: \"<\" or \">\" expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".");
+                        }
+                        else if(currToken.getValue().equals("<") || currToken.getValue().equals(">"))
+                        {
+                            newNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                            this.nextUid++;
+                            currNode.addChild(newNode);
+
+                            prevToken = currToken;
+                            innerBoolCount++;
+                            currToken = innerBoolRoute(prevToken, currNode);
+                        }
+                        else
+                        {
+                            return buildAndDeclareError("Comparison character: \"<\" or \">\" expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".");
+                        }
+                    }
+                    else
+                    {
+                        innerBoolCount = 0;
+                    }
                 }
-            }
-            else
-            {
-                this.Error = true;
-                String errorMsg = "Comparison character: \"<\" or \">\" expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
-                this.ErrorToken = new Token("Parser Error", errorMsg);
-                declareError();
-                return null;
             }
         }
         else
         {
             this.Error = true;
-            String errorMsg = "User defined name expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
+            String errorMsg = "User defined name, Number or Number Operator expected after " + prevToken.getType() + ": " + prevToken.getValue() + ".";
             this.ErrorToken = new Token("Parser Error", errorMsg);
             declareError();
             return null;
@@ -1088,5 +1428,13 @@ public class Parser
             this.ErrorDeclared = true;
             this.SyntaxTree = new Node(-1, this.ErrorToken.getType(), this.ErrorToken.getValue());
         }
+    }
+
+    private Token buildAndDeclareError(String errorMsg)
+    {
+        this.Error = true;
+        this.ErrorToken = new Token("Parser Error", errorMsg);
+        declareError();
+        return null;
     }
 }

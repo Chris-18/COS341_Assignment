@@ -1,0 +1,8 @@
+x = scope0;
+for(outerforscope=0; outerforscope<outerforscope; outerforscope=add(outerforscope,1)) 
+   { while(eq(outerforscope,outerforscope)) { outerforscope; 
+                                for(newscope=0;newscope<newscope;newscope=add(newscope,1)){ n=newscope }; 
+                                v=outerforscope; 
+                                for(otherscope=0;otherscope<otherscope;otherscope=add(otherscope,1)){ o=otherscope }; 
+                                outerforscope=z } ; outerforscope } ;
+y = scope0
