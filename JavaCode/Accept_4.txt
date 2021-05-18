@@ -1,0 +1,10 @@
+scope0 ; 
+proc myprocedure { scope01 ; proc myprocedure { input(s01andonedeeper) ; s01andonedeeper } 
+                             proc myprocedure { input(s01andonedeeper) ; s01andonedeeper } 
+                             proc myprocedure { input(s01andonedeeper) ; s01andonedeeper } } 
+proc myprocedure { scope02 ; proc myprocedure { input(s02andonedeeper) ; s02andonedeeper } 
+                             proc myprocedure { input(s02andonedeeper) ; s02andonedeeper } 
+                             proc myprocedure { input(s02andonedeeper) ; s02andonedeeper } } 
+proc myprocedure { scope03 ; proc myprocedure { input(s03andonedeeper) ; s03andonedeeper } 
+                             proc myprocedure { input(s03andonedeeper) ; s03andonedeeper } 
+                             proc myprocedure { input(s03andonedeeper) ; s03andonedeeper } }

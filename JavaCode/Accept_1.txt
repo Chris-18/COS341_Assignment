@@ -1,0 +1,13 @@
+scope=0;
+for(bimbl=0; bambl<bumbl; girk=add(gark,1)) { scope=1;
+for(gurk=0; doesnt<make; any=add(sense,1)) { scope=2;
+for(kling=0; klang<klong; that=add(is,1)) { scope=3 } } } ; 
+scope=again0;
+for(silly=0; but<in; parsing=add(we,1)) { scope=another1;
+for(dont=0; care<whether; it=add(makes,1)) { scope=another2; 
+for(any=0; sense<because; the=add(parser,1)) { scope=another3 } } } ; 
+scope=again0;
+for(checks=0; the<syntax; without=add(caring,1)) { scope=one;
+for(about=0; the<semantics; you=add(are,1)) { scope=two;
+for(a=0; third<year; student=add(fantastic,1)) { scope=three } } } ;
+scope=null

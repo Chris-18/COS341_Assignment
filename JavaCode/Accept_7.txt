@@ -1,0 +1,7 @@
+x = scope0;
+while(eq(scope0,scope0)) { scope0; 
+                           for(newscope=0;newscope<newscope;newscope=add(newscope,1)){ n=newscope }; 
+                           v=scope0; 
+                           for(otherscope=0;otherscope<otherscope;otherscope=add(otherscope,1)){ o=otherscope }; 
+                           scope0=z };
+y = scope0

@@ -1,0 +1,7 @@
+scope0 ;
+while(eq(nullscope,nullscope)) { scope0 ; for(x=0; x<forscope; x=add(x,1) ){ forscope } ; scope0 } ;
+scope0 ;
+proc procscope { procscope ;
+                 while(eq(procscope,procscope)) { procscope ; for(x=0; x<forscopeinproc; x=add(x,1) ){ forscopeinproc } ; procscope } ;
+                 procscope ;
+                 proc anotherprocscope { anotherprocscope ; output(anotherprocscope) } } 

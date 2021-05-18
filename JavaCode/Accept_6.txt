@@ -1,0 +1,7 @@
+scope0 ;
+scope0 = x ;
+proc procscope { procscope ;
+                 while(eq(procscope,procscope)) { procscope ; for(pf=0;pf<pf;pf=add(pf,1)){ pf = forinprocscope } ; procscope } ;
+                 procscope ;
+                 proc deeperprocscope { input(deeperprocscope) ; x = deeperprocscope }  
+                 proc anotherprocscope { output(anotherprocscope) ; anotherprocscope = y } } 
