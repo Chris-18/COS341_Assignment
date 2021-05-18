@@ -1,8 +1,9 @@
 public class Row
 {
-    private int uid;
-    private String nodeText;
-    private String scope;
+    private final int uid;
+    private final String nodeText;
+    private final String scope;
+    private String newName = "";
 
     public Row(int uid, String nodeText, String scope)
     {
@@ -26,6 +27,16 @@ public class Row
         return scope;
     }
 
+    public String getNewName()
+    {
+        return newName;
+    }
+
+    public void setNewName(String newName)
+    {
+        this.newName = newName;
+    }
+
     @Override
     public String toString()
     {
@@ -33,6 +44,7 @@ public class Row
                 "uid=" + uid +
                 ", nodeText='" + nodeText + '\'' +
                 ", scope='" + scope + '\'' +
+                ", newName='" + newName + '\'' +
                 '}';
     }
 }

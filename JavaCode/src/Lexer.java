@@ -7,12 +7,18 @@ import java.util.regex.Pattern;
 
 public class Lexer
 {
-    private static Token Head = null;
-    private static Token Tail = null;
-    private static Boolean Error = false;
-    private static String ErrorMsg = "";
+    private Token Head = null;
+    private Token Tail = null;
+    private Boolean Error = false;
+    private String ErrorMsg = "";
+    private final String fileName;
 
-    public static void main(String[] args)
+    public Lexer(String fileName)
+    {
+        this.fileName = fileName;
+    }
+
+    public Token lex()
     {
         try
         {
@@ -21,7 +27,7 @@ public class Lexer
             Pattern p;
             Matcher m;
 
-            File myFile = new File(args[0]);
+            File myFile = new File(this.fileName);
             Scanner myReader = new Scanner(myFile);
             while (myReader.hasNextLine())
             {
@@ -33,7 +39,8 @@ public class Lexer
             //System.out.println(data + "\n");
 
             int pos = 0;
-            while(pos < data.length())
+            int len = data.length();
+            while(pos < len)
             {
                 String c = String.valueOf(data.charAt(pos));
                 regex = "-|[a-z0-9 {}(),.;\"<>=\n]";
@@ -139,22 +146,38 @@ public class Lexer
 
             if(Error)
             {
-                System.out.println("Lexical Error: " + ErrorMsg);
+                return new Token("Lexical Error", ErrorMsg);
             }
             else
             {
-                String result = getTokens();
-                System.out.println(result);
+                return this.Head;
             }
         }
         catch (FileNotFoundException e)
         {
-            System.out.println("An error occurred.");
             e.printStackTrace();
+            return new Token("File Error", "An error occurred opening the file.");
         }
     }
 
-    private static int ScanForWholeNumber(int pos, String data)
+    public String getTokens(Token Head)
+    {
+        String result = "";
+
+        if (Head != null)
+        {
+            Token curr = Head;
+            result += "(Type: " + curr.getType() + " / Value: \"" + curr.getValue() + "\")";
+            while (curr.getNext() != null)
+            {
+                curr = curr.getNext();
+                result += " -> (Type: " + curr.getType() + " / Value: \"" + curr.getValue() + "\")";
+            }
+        }
+        return result;
+    }
+
+    private int ScanForWholeNumber(int pos, String data)
     {
         String result = String.valueOf(data.charAt(pos));
         String regex = "[0-9]";
@@ -177,6 +200,10 @@ public class Lexer
                     m = p.matcher(String.valueOf(data.charAt(pos)));
                 }
             }
+        }
+        else
+        {
+            pos++;
         }
 
         if(result.equals("-"))
@@ -205,7 +232,7 @@ public class Lexer
         return pos;
     }
 
-    private static int ScanForShortString(int pos, String data)
+    private int ScanForShortString(int pos, String data)
     {
         if(pos+1 < data.length())
         {
@@ -270,7 +297,7 @@ public class Lexer
         return pos;
     }
 
-    private static int ScanForVariableName(int pos, String data)
+    private int ScanForVariableName(int pos, String data)
     {
         String result = String.valueOf(data.charAt(pos));
         if(pos+1 < data.length())
@@ -303,7 +330,7 @@ public class Lexer
             }
             else
             {
-                addToken("Variable name", result);
+                addToken("User defined name", result);
             }
         }
         else
@@ -317,14 +344,14 @@ public class Lexer
             }
             else
             {
-                addToken("Variable name", result);
+                addToken("User defined name", result);
             }
             pos++;
         }
         return pos;
     }
 
-    private static void assignToAppropriateGroup(String result)
+    private void assignToAppropriateGroup(String result)
     {
         String regex = "(^eq$)";
         Pattern p = Pattern.compile(regex);
@@ -347,7 +374,7 @@ public class Lexer
         m = p.matcher(result);
         if(m.find())
         {
-            addToken("Number character", result);
+            addToken("Number operators", result);
         }
 
         regex = "(^if$)|(^then$)|(^while$)|(^for$)|(^else$)";
@@ -383,7 +410,7 @@ public class Lexer
         }
     }
 
-    private static void addToken(String Type, String Value)
+    private void addToken(String Type, String Value)
     {
         Token newToken = new Token(Type, Value);
         if(Head == null)
@@ -398,24 +425,5 @@ public class Lexer
         }
     }
 
-    private static String getTokens()
-    {
-        String result = "";
 
-        if(Head == null)
-        {
-            return result;
-        }
-        else
-        {
-            Token curr = Head;
-            result += "(Type: " + curr.getType() + " / Value: \"" + curr.getValue() + "\")";
-            while(curr.getNext() != null)
-            {
-                curr = curr.getNext();
-                result += " -> (Type: " + curr.getType() + " / Value: \"" + curr.getValue() + "\")";
-            }
-            return result;
-        }
-    }
 }
