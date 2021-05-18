@@ -25,6 +25,12 @@ public class Semantics
         return checkProcNamesInProcTreesAreDifferent(currNode, ProcNames);
     }
 
+    public boolean checkForLoopRule1()
+    {
+        Node currNode = this.tree;
+        return recursivelyCheckForLoop(currNode);
+    }
+
     public void changeTreeVariableNames()
     {
         Node currNode = tree;
@@ -240,5 +246,55 @@ public class Semantics
             }
         }
         return false;
+    }
+
+    private boolean recursivelyCheckForLoop(Node currNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("COND_LOOP") && currNode.getChildren().get(0).getNodeDetail().equals("for"))
+            {
+                Node child1 = currNode.getChildren().get(1);
+                Node child2 = currNode.getChildren().get(2);
+                Node child3 = currNode.getChildren().get(3);
+                Node child3child = child3.getChildren().get(1);
+                Node child4 = currNode.getChildren().get(4);
+
+                String loopVarName = child1.getChildren().get(0).getRowInTable().getNewName();
+
+                if(child2.getChildren().get(0).getRowInTable().getNewName().equals(loopVarName) &&
+                        child3.getChildren().get(0).getRowInTable().getNewName().equals(loopVarName) &&
+                        child3child.getChildren().get(1).getRowInTable().getNewName().equals(loopVarName))
+                {
+                    for(int i = 4; i < currNode.getChildren().size(); i++)
+                    {
+                        if(recursivelyCheckForLoop(currNode.getChildren().get(i)))
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    if(recursivelyCheckForLoop(currNode.getChildren().get(i)))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
 }

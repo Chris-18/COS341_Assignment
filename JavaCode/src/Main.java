@@ -4,7 +4,7 @@ public class Main
 {
     public static void main(String[] args)
     {
-        Lexer lexer = new Lexer(args[0]);
+        Lexer lexer = new Lexer("test.txt");
         Token result = lexer.lex();
         if(result.getType().equals("Lexical Error") || result.getType().equals("File Error"))
         {
@@ -30,6 +30,10 @@ public class Main
                 else if(semantics.checkRuleP2())
                 {
                     System.out.println("Error: Parent and child Procedures share the same name.");
+                }
+                else if(semantics.checkForLoopRule1())
+                {
+                    System.out.println("Error: All user defined names in for loop are not the same.");
                 }
                 else
                 {
