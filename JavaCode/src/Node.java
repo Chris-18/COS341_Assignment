@@ -6,12 +6,8 @@ public class Node
     private String typeOfNode;
     private String NodeDetail;
     private Row rowInTable = null;
-    private Vector<Node> children = new Vector<Node>();
-
-    public Node(int uid)
-    {
-        this.uid = uid;
-    }
+    private Vector<Node> children = new Vector<>();
+    private static int scopeValue = 0;
 
     public Node(int uid, String typeOfNode, String nodeDetail)
     {
@@ -96,7 +92,7 @@ public class Node
             {
                 result += "\t";
             }
-            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "\n";
+            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "\n";
             for(int i = 0; i < numIndentations; i++)
             {
                 result += "\t";
@@ -120,7 +116,7 @@ public class Node
             {
                 result += "\t";
             }
-            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "\n";
+            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "\n";
         }
         return result;
     }
@@ -177,11 +173,10 @@ public class Node
 
     public Vector<Row> buildSyntaxTable()
     {
-        int scope = 0;
-        return this.buildSyntaxTableRecursively("", scope);
+        return this.buildSyntaxTableRecursively("");
     }
 
-    private Vector<Row> buildSyntaxTableRecursively(String previousScope, int currentScope)
+    private Vector<Row> buildSyntaxTableRecursively(String previousScope)
     {
         Row newRow;
         Vector<Row> Table = new Vector<>();
@@ -191,20 +186,20 @@ public class Node
             if(previousScope.equals(""))
             {
                 previousScope = previousScope + "0";
-                currentScope++;
+                scopeValue++;
             }
             newRow = new Row(this.uid, this.NodeDetail, previousScope);
         }
         else if(this.NodeDetail.equals("COND_LOOP") && this.children.get(0).NodeDetail.equals("for"))
         {
-            previousScope = previousScope + "." + currentScope;
-            currentScope++;
+            previousScope = previousScope + "." + scopeValue;
+            scopeValue++;
             newRow = new Row(this.uid, this.NodeDetail, previousScope);
         }
         else if(this.NodeDetail.equals("PROC"))
         {
-            previousScope = previousScope + "." + currentScope;
-            currentScope++;
+            previousScope = previousScope + "." + scopeValue;
+            scopeValue++;
             newRow = new Row(this.uid, this.NodeDetail, previousScope);
         }
         else
@@ -217,7 +212,7 @@ public class Node
 
         for (Node child : this.children)
         {
-            Vector<Row> tempTable = child.buildSyntaxTableRecursively(previousScope, currentScope);
+            Vector<Row> tempTable = child.buildSyntaxTableRecursively(previousScope);
             for (Row tempRow : tempTable)
             {
                 Table.addElement(tempRow);

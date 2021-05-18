@@ -1,8 +1,10 @@
+import java.util.Vector;
+
 public class Main
 {
     public static void main(String[] args)
     {
-        Lexer lexer = new Lexer("Accept_0.txt");
+        Lexer lexer = new Lexer(args[0]);
         Token result = lexer.lex();
         if(result.getType().equals("Lexical Error") || result.getType().equals("File Error"))
         {
@@ -18,8 +20,22 @@ public class Main
             }
             else
             {
-                System.out.print(tree.printTree());
-                //System.out.print(tree.printTreeWithNoNewLines());
+                Vector<Row> Table = tree.buildSyntaxTable();
+                Semantics semantics = new Semantics(tree, Table);
+                semantics.changeTreeVariableNames();
+                if(semantics.checkRuleP1())
+                {
+                    System.out.println("Error:Procedure Call with User defined name.");
+                }
+                else if(semantics.checkRuleP2())
+                {
+                    System.out.println("Error: Parent and child Procedures share the same name.");
+                }
+                else
+                {
+                    System.out.print(tree.printTree());
+                    //System.out.print(tree.printTreeWithNoNewLines());
+                }
             }
         }
     }
