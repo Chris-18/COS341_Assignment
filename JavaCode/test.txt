@@ -1,0 +1,10 @@
+if((yes < yes))
+then
+{
+    hello = "yes"
+};
+
+find;
+
+hello = -5;
+input(x);
