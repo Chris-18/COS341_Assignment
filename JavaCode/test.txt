@@ -7,10 +7,10 @@ proc checknumber
     m = x;
     newscope = x;
     scope;
-    test;
     for(newscope=0;newscope<newscope;newscope=add(newscope,1))
     {
         n=test;
+        scope;
         for(he=0;he<n;he=add(he,1))
         {
             x = "hello"

@@ -23,7 +23,7 @@ public class Main
                 Vector<Row> Table = tree.buildSyntaxTable();
                 Semantics semantics = new Semantics(tree, Table);
                 semantics.changeTreeVariableNames();
-                semantics.changeTreeProcedureNames();
+                boolean callError = semantics.changeTreeProcedureNames();
                 if(semantics.checkRuleP1())
                 {
                     System.out.println("Error:Procedure Call with User defined name.");
@@ -39,6 +39,10 @@ public class Main
                 else if(semantics.checkForLoopRule2())
                 {
                     System.out.println("Error: For loop user defined name changed within loop body.");
+                }
+                else if(callError)
+                {
+                    System.out.println("Error: Invalid Procedure call.");
                 }
                 else
                 {

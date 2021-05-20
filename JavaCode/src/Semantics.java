@@ -8,6 +8,7 @@ public class Semantics
     private Vector<Row> Table;
     private static int variableNameNumber = 0;
     private static int procedureNameNumber = 0;
+    private boolean isCallError = false;
 
     public Semantics(Node tree, Vector<Row> Table)
     {
@@ -46,12 +47,13 @@ public class Semantics
         recursivelyIterateThroughTreeAndChangeVariableNames(currNode);
     }
 
-    public void changeTreeProcedureNames()
+    public boolean changeTreeProcedureNames()
     {
         Node currNode = this.tree;
         recursivelyIterateThroughTreeAndChangeProcedureNames(currNode);
         currNode = this.tree;
         recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(currNode);
+        return isCallError;
     }
 
     private boolean recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(Node currNode)
@@ -61,7 +63,15 @@ public class Semantics
             if(currNode.getNodeDetail().equals("INSTR") && currNode.getChildren().get(0).getNodeDetail().equals("CALL"))
             {
                 Node child = currNode.getChildren().get(0);
-                return child.getChildren().get(0).getRowInTable().getNewName().equals("");
+                if(child.getChildren().get(0).getRowInTable().getNewName().equals(""))
+                {
+                    isCallError = true;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             else if(currNode.getNodeDetail().equals("PROC_DEFS"))
             {
@@ -72,7 +82,7 @@ public class Semantics
                 }
                 else
                 {
-                    recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(proc.getChildren().get(2));
+                    return recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(proc.getChildren().get(2));
                 }
             }
             else
@@ -122,7 +132,9 @@ public class Semantics
             {
                 if(currNode.getChildren().get(1).getNodeDetail().equals(callNode.getNodeDetail()))
                 {
-                    if(currNode.getRowInTable().getScope().length() == callNode.getRowInTable().getScope().length() + 2)
+                    if(currNode.getRowInTable().getScope().length() == callNode.getRowInTable().getScope().length() ||
+                            currNode.getRowInTable().getScope().length() == callNode.getRowInTable().getScope().length() + 1 ||
+                            currNode.getRowInTable().getScope().length() == callNode.getRowInTable().getScope().length() + 2)
                     {
                         if(currNode.getRowInTable().getNewName().equals(""))
                         {
