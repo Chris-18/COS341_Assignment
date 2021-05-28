@@ -8,6 +8,7 @@ public class Node
     private Row rowInTable = null;
     private Vector<Node> children = new Vector<>();
     private static int scopeValue = 0;
+    private String type;
 
     public Node(int uid, String typeOfNode, String nodeDetail)
     {
@@ -71,6 +72,16 @@ public class Node
         this.rowInTable = rowInTable;
     }
 
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String type)
+    {
+        this.type = type;
+    }
+
     public String printTree()
     {
         if(this.rowInTable == null)
@@ -92,7 +103,7 @@ public class Node
             {
                 result += "\t";
             }
-            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "\n";
+            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "-" + this.getType() + "\n";
             for(int i = 0; i < numIndentations; i++)
             {
                 result += "\t";

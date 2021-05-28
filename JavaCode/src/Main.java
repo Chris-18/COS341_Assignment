@@ -46,6 +46,7 @@ public class Main
                 }
                 else
                 {
+                    TypeChecker typeChecker = new TypeChecker(tree, Table);
                     System.out.print(tree.printTree());
                     //System.out.print(tree.printTreeWithNoNewLines());
                 }

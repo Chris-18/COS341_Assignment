@@ -1,6 +1,8 @@
-n = m;
+n = 0;
 checknumber;
 scope;
+input(n);
+output(n);
 halt;
 proc checknumber
 {
@@ -11,9 +13,9 @@ proc checknumber
     {
         n=test;
         scope;
-        for(he=0;he<n;he=add(he,1))
+        for(x=0;x<n;x=add(x,1))
         {
-            x = "hello"
+            he = "hello"
         }
     };
     proc scope

@@ -233,9 +233,14 @@ public class Parser
                 if(currToken.getValue().equals(")"))
                 {
                     //add to list
-                    Node newNode = new Node(this.nextUid, "Terminal", IO+"(" + prevToken.getValue() + ")");
+                    Node newNode = new Node(this.nextUid, "Terminal", IO);
                     currNode.addChild(newNode);
                     this.nextUid++;
+
+                    newNode = new Node(this.nextUid, "Terminal", prevToken.getValue());
+                    currNode.addChild(newNode);
+                    this.nextUid++;
+
                     currToken = currToken.getNext();
                 }
                 else
