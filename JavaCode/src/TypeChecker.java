@@ -86,7 +86,7 @@ public class TypeChecker
         }
     }
 
-    private void analyseProg(Node Prog)
+   private void analyseProg(Node Prog)
     {
         boolean typeCheck = true;
         for(Node child: Prog.getChildren())
@@ -175,11 +175,33 @@ public class TypeChecker
             }
             else if(child.getNodeDetail().equals("COND_BRANCH"))
             {
-
+                if(child.getType().equals("c"))
+                {
+                    Instr.setType("c");
+                }
+                else
+                {
+                    analyseCond_Branch(child);
+                    if(child.getType().equals("c"))
+                    {
+                        Instr.setType("c");
+                    }
+                }
             }
             else if(child.getNodeDetail().equals("COND_LOOP"))
             {
-
+                if(child.getType().equals("c"))
+                {
+                    Instr.setType("c");
+                }
+                else
+                {
+                    analyseCond_Loop(child);
+                    if(child.getType().equals("c"))
+                    {
+                        Instr.setType("c");
+                    }
+                }
             }
         }
     }
@@ -252,6 +274,10 @@ public class TypeChecker
                     analyseCalc(child2);
                     if(child2.getType().equals("n"))
                     {
+                        Assign.setType("c");
+                    }
+                    else
+                    {
                         Assign.setType("e");
                     }
                 }
@@ -323,7 +349,127 @@ public class TypeChecker
     {
         if(Calc != null)
         {
+            Node child1 = Calc.getChildren().get(0);
+            Node child2 = Calc.getChildren().get(1);
+            Node child3 = Calc.getChildren().get(2);
+            if(child2.getType().equals("n") && child3.getType().equals("n"))
+            {
+                Calc.setType("n");
+            }
+            else
+            {
+                analyseNumExpr(child2);
+                analyseNumExpr(child3);
+                if(child2.getType().equals("n") && child3.getType().equals("n"))
+                {
+                    Calc.setType("n");
+                }
+                else
+                {
+                    Calc.setType("e");
+                }
+            }
+        }
+    }
 
+    private void analyseNumExpr(Node NumExpr)
+    {
+        if(NumExpr != null)
+        {
+
+            if(NumExpr.getTypeOfNode().equals("Non-Terminal"))
+            {
+                if(!NumExpr.getType().equals("n"))
+                {
+                    analyseCalc(NumExpr);
+                }
+            }
+            else if(!NumExpr.getRowInTable().getNewName().equals(""))
+            {
+                if(getVariableType(NumExpr.getRowInTable().getNewName()).equals("s"))
+                {
+                    NumExpr.setType("e");
+                }
+                else
+                {
+                    NumExpr.setType("n");
+                    setSymbolTableVariableType(NumExpr.getRowInTable().getNewName(), "n");
+                }
+            }
+            else
+            {
+                NumExpr.setType("n");
+            }
+        }
+    }
+
+    private void analyseCond_Branch(Node Cond_Branch)
+    {
+        if(Cond_Branch != null)
+        {
+            int size = Cond_Branch.getChildren().size();
+            if(size == 4)
+            {
+                Node child2 = Cond_Branch.getChildren().get(1);
+                Node child4 = Cond_Branch.getChildren().get(3);
+                if((child2.getType().equals("b") || child2.getType().equals("f")) && child4.getType().equals("c"))
+                {
+                    Cond_Branch.setType("c");
+                }
+                else
+                {
+                    analyseBool(child2);
+                    analyseInstr(child4);
+                    if((child2.getType().equals("b") || child2.getType().equals("f")) && child4.getType().equals("c"))
+                    {
+                        Cond_Branch.setType("c");
+                    }
+                }
+            }
+            else if(size == 6)
+            {
+                Node child2 = Cond_Branch.getChildren().get(1);
+                Node child4 = Cond_Branch.getChildren().get(3);
+                Node child6 = Cond_Branch.getChildren().get(5);
+                if((child2.getType().equals("b") || child2.getType().equals("f")) && child4.getType().equals("c") && child6.getType().equals("c"))
+                {
+                    Cond_Branch.setType("c");
+                }
+                else
+                {
+                    analyseBool(child2);
+                    analyseInstr(child4);
+                    analyseInstr(child6);
+                    if((child2.getType().equals("b") || child2.getType().equals("f")) && child4.getType().equals("c") && child6.getType().equals("c"))
+                    {
+                        Cond_Branch.setType("c");
+                    }
+                }
+            }
+        }
+    }
+
+    private void analyseBool(Node Bool)
+    {
+        if(Bool != null)
+        {
+            Node child1 = Bool.getChildren().get(0);
+            if(child1.getNodeDetail().equals("eq"))
+            {
+
+            }
+            else if(child1.getNodeDetail().equals("not"))
+            {
+
+            }
+            else if(child1.getNodeDetail().equals("and") || child1.getNodeDetail().equals("or"))
+            {
+
+            }
+            else
+            {
+                
+            }
         }
     }
 }

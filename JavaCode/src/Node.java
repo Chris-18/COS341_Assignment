@@ -8,7 +8,7 @@ public class Node
     private Row rowInTable = null;
     private Vector<Node> children = new Vector<>();
     private static int scopeValue = 0;
-    private String type;
+    private String type = "";
 
     public Node(int uid, String typeOfNode, String nodeDetail)
     {

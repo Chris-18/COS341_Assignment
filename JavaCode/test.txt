@@ -1,4 +1,22 @@
-n = 0;
+n = add(mult(2,2), 1);
+if(eq(x,n))
+then{
+    output(x)
+};
+if(not(x<n))
+then{
+    output(x)
+}
+else{
+    output(n)
+};
+if(or((x<n),(x<n)))
+then{
+    output(x)
+}
+else{
+    output(n)
+};
 checknumber;
 scope;
 input(n);

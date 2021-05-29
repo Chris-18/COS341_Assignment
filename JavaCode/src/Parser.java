@@ -325,6 +325,10 @@ public class Parser
                         this.nextUid++;
                         currNode.addChild(newNode);
 
+                        Node operatorNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                        this.nextUid++;
+                        newNode.addChild(operatorNode);
+
                         currToken = outerNumberExpression(currToken, newNode);
                     }
                 }
@@ -423,6 +427,10 @@ public class Parser
                     newNode = new Node(this.nextUid, "Non-Terminal", "CALC");
                     this.nextUid++;
                     currNode.addChild(newNode);
+
+                    Node operatorNode = new Node(this.nextUid, "Terminal", currToken.getValue());
+                    this.nextUid++;
+                    newNode.addChild(operatorNode);
                     currToken = outerNumberExpression(currToken, newNode);
                 }
             }
