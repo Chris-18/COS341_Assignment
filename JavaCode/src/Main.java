@@ -23,6 +23,7 @@ public class Main
                 Vector<Row> Table = tree.buildSyntaxTable();
                 Semantics semantics = new Semantics(tree, Table);
                 semantics.changeTreeVariableNames();
+                semantics.addLevels();
                 boolean callError = semantics.changeTreeProcedureNames();
                 if(semantics.checkRuleP1())
                 {
@@ -47,7 +48,30 @@ public class Main
                 else
                 {
                     TypeChecker typeChecker = new TypeChecker(tree, Table);
-                    System.out.print(tree.printTree());
+                    TypeCheckResult typeCheckResult = typeChecker.runTypeChecking();
+                    tree = typeCheckResult.getTree();
+                    if(!typeCheckResult.isError())
+                    {
+                        String output = "";
+                        for(String warning: typeCheckResult.getWarningMsgs())
+                        {
+                            output += warning + "   ";
+                        }
+                        //output += tree.printTree();
+                        output += tree.printTreeWithNoNewLines();
+                        System.out.println(output);
+                    }
+                    else
+                    {
+                        String output = "";
+                        for(String err: typeCheckResult.getErrorMsgs())
+                        {
+                            output += err + "   ";
+                        }
+                        //output += tree.printTree();
+                        output += tree.printTreeWithNoNewLines();
+                        System.out.println(output);
+                    }
                     //System.out.print(tree.printTreeWithNoNewLines());
                 }
             }

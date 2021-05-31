@@ -47,6 +47,11 @@ public class Semantics
         recursivelyIterateThroughTreeAndChangeVariableNames(currNode);
     }
 
+    public void addLevels()
+    {
+        this.tree.addTreeLevelDescription();
+    }
+
     public boolean changeTreeProcedureNames()
     {
         Node currNode = this.tree;
@@ -132,11 +137,9 @@ public class Semantics
             {
                 if(currNode.getChildren().get(1).getNodeDetail().equals(callNode.getNodeDetail()))
                 {
-                    if(currNode.getRowInTable().getScope().length() == callNode.getRowInTable().getScope().length() ||
-                            currNode.getRowInTable().getScope().length() == callNode.getRowInTable().getScope().length() + 1 ||
-                            currNode.getRowInTable().getScope().length() == callNode.getRowInTable().getScope().length() + 2)
+                    if((callNode.getLevel() == currNode.getLevel()) || (callNode.getLevel() + 1 == currNode.getLevel()))
                     {
-                        if(currNode.getRowInTable().getNewName().equals(""))
+                        if(currNode.getChildren().get(1).getRowInTable().getNewName().equals(""))
                         {
                             currNode.getChildren().get(1).getRowInTable().setNewName("p" + procedureNameNumber);
                             callNode.getRowInTable().setNewName("p" + procedureNameNumber);
@@ -144,7 +147,7 @@ public class Semantics
                         }
                         else
                         {
-                            callNode.getRowInTable().setNewName(currNode.getRowInTable().getNewName());
+                            callNode.getRowInTable().setNewName(currNode.getChildren().get(1).getRowInTable().getNewName());
                         }
                     }
                     else

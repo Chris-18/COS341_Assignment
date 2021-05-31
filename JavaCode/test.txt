@@ -1,5 +1,6 @@
 n = add(mult(2,2), 1);
-if(eq(x,n))
+s = "hello";
+if(eq(s,n))
 then{
     output(x)
 };
@@ -16,6 +17,10 @@ then{
 }
 else{
     output(n)
+};
+while(not eq(s,n))
+{
+    input(n)
 };
 checknumber;
 scope;

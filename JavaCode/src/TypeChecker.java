@@ -5,6 +5,8 @@ public class TypeChecker
     private Node tree;
     private Vector<Row> syntaxTable;
     private Vector<SymbolRow> symbolTable = new Vector<>();
+    private Vector<String> warningMsg = new Vector<>();
+    private Vector<String> ErrorMsgs = new Vector<>();
 
     public TypeChecker(Node tree, Vector<Row> table)
     {
@@ -12,6 +14,21 @@ public class TypeChecker
         this.syntaxTable = table;
         buildSymbolTable();
         populateDefaultTypeValues();
+    }
+
+    public TypeCheckResult runTypeChecking()
+    {
+        Node currNode = this.tree;
+        analyseProg(currNode);
+        if(currNode.getType().equals("c"))
+        {
+            checkForAndRemoveDeadCode();
+            return new TypeCheckResult(false, this.tree, this.ErrorMsgs, this.warningMsg);
+        }
+        else
+        {
+            return new TypeCheckResult(true, this.tree, this.ErrorMsgs, this.warningMsg);
+        }
     }
 
     private void buildSymbolTable()
@@ -112,6 +129,7 @@ public class TypeChecker
         if(!typeCheck)
         {
             Prog.setType("e");
+            this.ErrorMsgs.addElement("Error: PROG node encountered an error.");
         }
         else
         {
@@ -141,6 +159,11 @@ public class TypeChecker
                     {
                         Instr.setType("c");
                     }
+                    else
+                    {
+                        Instr.setType("e");
+                        this.ErrorMsgs.addElement("Error: IO Node " + child.getRowInTable().getUid() + " encountered an error.");
+                    }
                 }
             }
             else if(child.getNodeDetail().equals("CALL"))
@@ -155,6 +178,11 @@ public class TypeChecker
                     if(child.getType().equals("c"))
                     {
                         Instr.setType("c");
+                    }
+                    else
+                    {
+                        Instr.setType("e");
+                        this.ErrorMsgs.addElement("Error: CALL node " + child.getRowInTable().getUid() + " encountered an error.");
                     }
                 }
             }
@@ -171,6 +199,11 @@ public class TypeChecker
                     {
                         Instr.setType("c");
                     }
+                    else
+                    {
+                        Instr.setType("e");
+                        this.ErrorMsgs.addElement("Error: ASSIGN node " + child.getRowInTable().getUid() + " encountered an error.");
+                    }
                 }
             }
             else if(child.getNodeDetail().equals("COND_BRANCH"))
@@ -185,6 +218,11 @@ public class TypeChecker
                     if(child.getType().equals("c"))
                     {
                         Instr.setType("c");
+                    }
+                    else
+                    {
+                        Instr.setType("e");
+                        this.ErrorMsgs.addElement("Error: COND_BRANCH node " + child.getRowInTable().getUid() + " encountered an error.");
                     }
                 }
             }
@@ -201,6 +239,11 @@ public class TypeChecker
                     {
                         Instr.setType("c");
                     }
+                    else
+                    {
+                        Instr.setType("e");
+                        this.ErrorMsgs.addElement("Error: COND_LOOP node " + child.getRowInTable().getUid() + " encountered an error.");
+                    }
                 }
             }
         }
@@ -213,28 +256,29 @@ public class TypeChecker
             Node ioType = Io.getChildren().get(0);
             if(ioType.getNodeDetail().equals("input"))
             {
-                String varName = ioType.getChildren().get(1).getRowInTable().getNewName();
+                String varName = Io.getChildren().get(1).getRowInTable().getNewName();
                 if(getVariableType(varName).equals("s"))
                 {
                     Io.setType("e");
+                    this.ErrorMsgs.addElement("Error: Input var cannot be of type string.");
                 }
                 else
                 {
-                    ioType.getChildren().get(1).setType("n");
+                    Io.getChildren().get(1).setType("n");
                     setSymbolTableVariableType(varName, "n");
                     Io.setType("c");
                 }
             }
             else if(ioType.getNodeDetail().equals("output"))
             {
-                String varName = ioType.getChildren().get(1).getRowInTable().getNewName();
+                String varName = Io.getChildren().get(1).getRowInTable().getNewName();
                 if(getVariableType(varName).equals("n") || getVariableType(varName).equals("s"))
                 {
                     Io.setType("c");
                 }
                 else
                 {
-                    ioType.getChildren().get(1).setType("o");
+                    Io.getChildren().get(1).setType("o");
                     setSymbolTableVariableType(varName, "o");
                     Io.setType("c");
                 }
@@ -262,6 +306,7 @@ public class TypeChecker
                 if(getVariableType(varName1).equals("s"))
                 {
                     Assign.setType("e");
+                    this.ErrorMsgs.addElement("Error: Type mis-match in Assign " + Assign.getRowInTable().getUid());
                 }
                 else if(!getVariableType(varName1).equals("s") && child2.getType().equals("n"))
                 {
@@ -279,6 +324,7 @@ public class TypeChecker
                     else
                     {
                         Assign.setType("e");
+                        this.ErrorMsgs.addElement("Error: Type mis-match in Assign " + Assign.getRowInTable().getUid());
                     }
                 }
             }
@@ -289,15 +335,18 @@ public class TypeChecker
                 if(getVariableType(varName1).equals("n") && getVariableType(varName2).equals("s"))
                 {
                     Assign.setType("e");
+                    this.ErrorMsgs.addElement("Error: Type mis-match in Assign " + Assign.getRowInTable().getUid());
                 }
                 else if(getVariableType(varName1).equals("s") && getVariableType(varName2).equals("n"))
                 {
                     Assign.setType("e");
+                    this.ErrorMsgs.addElement("Error: Type mis-match in Assign " + Assign.getRowInTable().getUid());
                 }
                 else if(getVariableType(varName1).equals("n") && !getVariableType(varName2).equals("s"))
                 {
                     setSymbolTableVariableType(varName2, "n");
                     Assign.setType("c");
+                    this.ErrorMsgs.addElement("Error: Type mis-match in Assign " + Assign.getRowInTable().getUid());
                 }
                 else if(getVariableType(varName1).equals("s") && !getVariableType(varName2).equals("n"))
                 {
@@ -319,12 +368,13 @@ public class TypeChecker
                     if(getVariableType(varName1).equals("n"))
                     {
                         Assign.setType("e");
+                        this.ErrorMsgs.addElement("Error: Type mis-match in Assign " + Assign.getRowInTable().getUid());
                     }
                     else
                     {
                         child1.setType("s");
                         setSymbolTableVariableType(child1.getRowInTable().getNewName(), "s");
-                        Assign.setType("s");
+                        Assign.setType("c");
                     }
                 }
                 else
@@ -332,6 +382,7 @@ public class TypeChecker
                     if(getVariableType(varName1).equals("s"))
                     {
                         Assign.setType("e");
+                        this.ErrorMsgs.addElement("Error: Type mis-match in Assign " + Assign.getRowInTable().getUid());
                     }
                     else
                     {
@@ -367,6 +418,7 @@ public class TypeChecker
                 else
                 {
                     Calc.setType("e");
+                    this.ErrorMsgs.addElement("Error: Type mis-match in CALC " + Calc.getRowInTable().getUid());
                 }
             }
         }
@@ -389,6 +441,7 @@ public class TypeChecker
                 if(getVariableType(NumExpr.getRowInTable().getNewName()).equals("s"))
                 {
                     NumExpr.setType("e");
+                    this.ErrorMsgs.addElement("Error: Type mis-match in NUMEXPR " + NumExpr.getRowInTable().getUid());
                 }
                 else
                 {
@@ -424,6 +477,10 @@ public class TypeChecker
                     {
                         Cond_Branch.setType("c");
                     }
+                    else
+                    {
+                        this.ErrorMsgs.addElement("Error: Type mis-match in COND_BRANCH " + Cond_Branch.getRowInTable().getUid());
+                    }
                 }
             }
             else if(size == 6)
@@ -444,6 +501,10 @@ public class TypeChecker
                     {
                         Cond_Branch.setType("c");
                     }
+                    else
+                    {
+                        this.ErrorMsgs.addElement("Error: Type mis-match in COND_BRANCH " + Cond_Branch.getRowInTable().getUid());
+                    }
                 }
             }
         }
@@ -456,19 +517,557 @@ public class TypeChecker
             Node child1 = Bool.getChildren().get(0);
             if(child1.getNodeDetail().equals("eq"))
             {
-
+                Node child2 = Bool.getChildren().get(1);
+                Node child3 = Bool.getChildren().get(2);
+                if(child2.getNodeDetail().equals("BOOL"))
+                {
+                    if((child2.getType().equals("b") || child2.getType().equals("f")) &&
+                            (child3.getType().equals("b") || child3.getType().equals("f")))
+                    {
+                        Bool.setType("b");
+                    }
+                    else
+                    {
+                        analyseBool(child2);
+                        analyseBool(child3);
+                        if((child2.getType().equals("b") || child2.getType().equals("f")) &&
+                                (child3.getType().equals("b") || child3.getType().equals("f")))
+                        {
+                            Bool.setType("b");
+                        }
+                        else
+                        {
+                            this.ErrorMsgs.addElement("Error: Type mis-match in BOOL " + Bool.getRowInTable().getUid());
+                        }
+                    }
+                }
+                else if(!child2.getRowInTable().getNewName().equals("") &&
+                        !child3.getRowInTable().getNewName().equals(""))
+                {
+                    String varName2 = child2.getRowInTable().getNewName();
+                    String varName3 = child3.getRowInTable().getNewName();
+                    if(getVariableType(varName2).equals("n") && getVariableType(varName3).equals("s"))
+                    {
+                        Bool.setType("f");
+                    }
+                    else if(getVariableType(varName2).equals("s") && getVariableType(varName3).equals("n"))
+                    {
+                        Bool.setType("f");
+                    }
+                    else if(getVariableType(varName2).equals("n") && !getVariableType(varName3).equals("s"))
+                    {
+                        setSymbolTableVariableType(varName3, "n");
+                        Bool.setType("b");
+                    }
+                    else if(getVariableType(varName2).equals("s") && !getVariableType(varName3).equals("n"))
+                    {
+                        setSymbolTableVariableType(varName3, "s");
+                        Bool.setType("b");
+                    }
+                    else
+                    {
+                        setSymbolTableVariableType(varName2, "o");
+                        setSymbolTableVariableType(varName3, "o");
+                        Bool.setType("b");
+                    }
+                }
+                else
+                {
+                    if(child2.getType().equals("n") && child3.getType().equals("n"))
+                    {
+                        Bool.setType("b");
+                    }
+                    else
+                    {
+                        analyseNumExpr(child2);
+                        analyseNumExpr(child3);
+                        if(child2.getType().equals("n") && child3.getType().equals("n"))
+                        {
+                            Bool.setType("b");
+                        }
+                        else
+                        {
+                            this.ErrorMsgs.addElement("Error: Type mis-match in BOOL " + Bool.getRowInTable().getUid());
+                        }
+                    }
+                }
             }
             else if(child1.getNodeDetail().equals("not"))
             {
-
+                Node child2 = Bool.getChildren().get(1);
+                if(child2.getType().equals("b") || child2.getType().equals("f"))
+                {
+                    Bool.setType("b");
+                }
+                else
+                {
+                    analyseBool(child2);
+                    if(child2.getType().equals("b") || child2.getType().equals("f"))
+                    {
+                        Bool.setType("b");
+                    }
+                    else
+                    {
+                        this.ErrorMsgs.addElement("Error: Type mis-match in BOOL " + Bool.getRowInTable().getUid());
+                    }
+                }
             }
             else if(child1.getNodeDetail().equals("and") || child1.getNodeDetail().equals("or"))
             {
-
+                Node child2 = Bool.getChildren().get(1);
+                Node child3 = Bool.getChildren().get(2);
+                if(child1.getNodeDetail().equals("and"))
+                {
+                    if(child2.getType().equals("f") && child3.getType().equals("b"))
+                    {
+                        Bool.setType("f");
+                    }
+                    else if(child2.getType().equals("b") && child3.getType().equals("f"))
+                    {
+                        Bool.setType("f");
+                    }
+                    else if(child2.getType().equals("f") && child3.getType().equals("f"))
+                    {
+                        Bool.setType("f");
+                    }
+                    else if(child2.getType().equals("b") && child3.getType().equals("b"))
+                    {
+                        Bool.setType("b");
+                    }
+                    else
+                    {
+                        analyseBool(child2);
+                        analyseBool(child3);
+                        if(child2.getType().equals("f") && child3.getType().equals("b"))
+                        {
+                            Bool.setType("f");
+                        }
+                        else if(child2.getType().equals("b") && child3.getType().equals("f"))
+                        {
+                            Bool.setType("f");
+                        }
+                        else if(child2.getType().equals("f") && child3.getType().equals("f"))
+                        {
+                            Bool.setType("f");
+                        }
+                        else if(child2.getType().equals("b") && child3.getType().equals("b"))
+                        {
+                            Bool.setType("b");
+                        }
+                        else
+                        {
+                            this.ErrorMsgs.addElement("Error: Type mis-match in BOOL " + Bool.getRowInTable().getUid());
+                        }
+                    }
+                }
+                else
+                {
+                    if((child2.getType().equals("b") || child2.getType().equals("f")) && (child3.getType().equals("b") || child3.getType().equals("f")))
+                    {
+                        Bool.setType("b");
+                    }
+                    else
+                    {
+                        analyseBool(child2);
+                        analyseBool(child3);
+                        if((child2.getType().equals("b") || child2.getType().equals("f")) && (child3.getType().equals("b") || child3.getType().equals("f")))
+                        {
+                            Bool.setType("b");
+                        }
+                        else
+                        {
+                            this.ErrorMsgs.addElement("Error: Type mis-match in BOOL " + Bool.getRowInTable().getUid());
+                        }
+                    }
+                }
             }
             else
             {
-                
+                Node child3 = Bool.getChildren().get(2);
+
+                String varName1 = child1.getRowInTable().getNewName();
+                String varName3 = child3.getRowInTable().getNewName();
+                if(getVariableType(varName1).equals("s") || getVariableType(varName3).equals("s"))
+                {
+                    Bool.setType("e");
+                }
+                else
+                {
+                    setSymbolTableVariableType(varName1, "n");
+                    setSymbolTableVariableType(varName3, "n");
+                    Bool.setType("b");
+                }
+            }
+        }
+    }
+
+    private void analyseCond_Loop(Node Cond_Loop)
+    {
+        if(Cond_Loop != null)
+        {
+            Node child1 = Cond_Loop.getChildren().get(0);
+            if(child1.getNodeDetail().equals("while"))
+            {
+                Node child2 = Cond_Loop.getChildren().get(1);
+                Node child3 = Cond_Loop.getChildren().get(2);
+                if((child2.getType().equals("b") || child2.getType().equals("f")) && child3.getType().equals("c"))
+                {
+                    Cond_Loop.setType("c");
+                }
+                else
+                {
+                    analyseBool(child2);
+                    analyseInstr(child3);
+                    if((child2.getType().equals("b") || child2.getType().equals("f")) && child3.getType().equals("c"))
+                    {
+                        Cond_Loop.setType("c");
+                    }
+                }
+            }
+            else
+            {
+                Node child2 = Cond_Loop.getChildren().get(1);
+                Node child3 = Cond_Loop.getChildren().get(2);
+                Node child4 = Cond_Loop.getChildren().get(3);
+
+                if(getVariableType(child2.getChildren().get(0).getRowInTable().getNewName()).equals("s"))
+                {
+                    Cond_Loop.setType("e");
+                }
+                else if(getVariableType(child3.getChildren().get(0).getRowInTable().getNewName()).equals("s"))
+                {
+                    Cond_Loop.setType("e");
+                }
+                else if(getVariableType(child3.getChildren().get(2).getRowInTable().getNewName()).equals("s"))
+                {
+                    Cond_Loop.setType("e");
+                }
+                else if(getVariableType(child4.getChildren().get(0).getRowInTable().getNewName()).equals("s"))
+                {
+                    Cond_Loop.setType("e");
+                }
+                else if(getVariableType(child4.getChildren().get(1).getChildren().get(1).getRowInTable().getNewName()).equals("s"))
+                {
+                    Cond_Loop.setType("e");
+                }
+                else
+                {
+                    boolean codeIsCorrect = true;
+                    for(int i = 4; i < Cond_Loop.getChildren().size(); i++)
+                    {
+                        if (!Cond_Loop.getChildren().get(i).getType().equals("c"))
+                        {
+                            codeIsCorrect = false;
+                            break;
+                        }
+                    }
+
+                    if(codeIsCorrect)
+                    {
+                        Cond_Loop.setType("c");
+                        setSymbolTableVariableType(child2.getChildren().get(0).getRowInTable().getNewName(), "n");
+                        setSymbolTableVariableType(child3.getChildren().get(0).getRowInTable().getNewName(), "n");
+                        setSymbolTableVariableType(child3.getChildren().get(2).getRowInTable().getNewName(), "n");
+                        setSymbolTableVariableType(child4.getChildren().get(0).getRowInTable().getNewName(), "n");
+                        setSymbolTableVariableType(child4.getChildren().get(1).getChildren().get(1).getRowInTable().getNewName(), "n");
+                    }
+                    else
+                    {
+                        for(int i = 4; i < Cond_Loop.getChildren().size(); i++)
+                        {
+                            analyseInstr(Cond_Loop.getChildren().get(i));
+                        }
+
+                        codeIsCorrect = true;
+                        for(int i = 4; i < Cond_Loop.getChildren().size(); i++)
+                        {
+                            if (!Cond_Loop.getChildren().get(i).getType().equals("c"))
+                            {
+                                codeIsCorrect = false;
+                                break;
+                            }
+                        }
+
+                        if(codeIsCorrect)
+                        {
+                            Cond_Loop.setType("c");
+                            setSymbolTableVariableType(child2.getChildren().get(0).getRowInTable().getNewName(), "n");
+                            setSymbolTableVariableType(child3.getChildren().get(0).getRowInTable().getNewName(), "n");
+                            setSymbolTableVariableType(child3.getChildren().get(2).getRowInTable().getNewName(), "n");
+                            setSymbolTableVariableType(child4.getChildren().get(0).getRowInTable().getNewName(), "n");
+                            setSymbolTableVariableType(child4.getChildren().get(1).getChildren().get(1).getRowInTable().getNewName(), "n");
+                        }
+                        else
+                        {
+                            this.ErrorMsgs.addElement("Error: Type mis-match for one or more var's in COND_LOOP " + Cond_Loop.getRowInTable().getUid());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void analyseProcDef(Node Proc_Def)
+    {
+        if(Proc_Def != null)
+        {
+            Node child1 = Proc_Def.getChildren().get(0);
+            if(child1.getType().equals("c"))
+            {
+                Proc_Def.setType("c");
+            }
+            else
+            {
+                analyseProc(child1);
+                if(child1.getType().equals("c"))
+                {
+                    Proc_Def.setType("c");
+                }
+                else
+                {
+                    this.ErrorMsgs.addElement("Error: Type mis-match found in PROC_DEF " + Proc_Def.getRowInTable().getUid());
+                }
+            }
+        }
+    }
+
+    private void analyseProc(Node Proc)
+    {
+        if(Proc != null)
+        {
+            Node child3 = Proc.getChildren().get(2);
+            if(child3.getType().equals("c"))
+            {
+                Proc.setType("c");
+            }
+            else
+            {
+                analyseProg(child3);
+                if(child3.getType().equals("c"))
+                {
+                    Proc.setType("c");
+                }
+                else
+                {
+                    this.ErrorMsgs.addElement("Error: Type mis-match in body of PROC " + Proc.getRowInTable().getUid());
+                }
+            }
+        }
+    }
+
+    private void checkForAndRemoveDeadCode()
+    {
+        Node currNode = this.tree;
+        recursivelyIterateThroughTreeForDeadCode(currNode);
+        recursivelyAnalyseDeadCode(currNode);
+        if(currNode.getType().equals("d"))
+        {
+            this.tree = null;
+        }
+        else
+        {
+            Node newRoot = new Node(currNode);
+            recursivelyRemoveDeadCode(newRoot, currNode);
+            this.tree = newRoot;
+        }
+    }
+
+    private void recursivelyIterateThroughTreeForDeadCode(Node currNode)
+    {
+        if(currNode != null)
+        {
+             if(currNode.getNodeDetail().equals("COND_BRANCH"))
+             {
+                analyseCond_BranchForDeadCode(currNode);
+             }
+             else if(currNode.getNodeDetail().equals("COND_LOOP"))
+             {
+                 analyseCond_LoopForDeadCode(currNode);
+             }
+             else
+             {
+                 for(Node child: currNode.getChildren())
+                 {
+                     recursivelyIterateThroughTreeForDeadCode(child);
+                 }
+             }
+        }
+    }
+
+    private void analyseCond_BranchForDeadCode(Node Cond_Branch)
+    {
+        if(Cond_Branch != null)
+        {
+            int size = Cond_Branch.getChildren().size();
+            if(size == 4)
+            {
+                Node child2 = Cond_Branch.getChildren().get(1);
+                if(child2.getChildren().get(0).getNodeDetail().equals("not"))
+                {
+                    if(child2.getChildren().get(1).getType().equals("f"))
+                    {
+                        Node temp = new Node(-1, "Temp", "Temp");
+                        for(int i = 3; i < Cond_Branch.getChildren().size(); i++)
+                        {
+                            temp.addChild(Cond_Branch.getChildren().get(i));
+                        }
+                        Cond_Branch.setChildren(temp.getChildren());
+                    }
+                }
+                else
+                {
+                    if(child2.getType().equals("f"))
+                    {
+                        Cond_Branch.setType("d");
+                    }
+                }
+            }
+            else
+            {
+                Node child2 = Cond_Branch.getChildren().get(1);
+                if(child2.getChildren().get(0).getNodeDetail().equals("not"))
+                {
+                    if(child2.getChildren().get(1).getType().equals("f"))
+                    {
+                        Node temp = new Node(-1, "Temp", "Temp");
+                        for(int i = 3; i < Cond_Branch.getChildren().size(); i++)
+                        {
+                            Node child = Cond_Branch.getChildren().get(i);
+                            if(child.getNodeDetail().equals("else"))
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                temp.addChild(Cond_Branch.getChildren().get(i));
+                            }
+                        }
+                        Cond_Branch.setChildren(temp.getChildren());
+                    }
+                }
+                else
+                {
+                    if(child2.getType().equals("f"))
+                    {
+                        int index = 0;
+                        for(int i = 0; i < Cond_Branch.getChildren().size(); i++)
+                        {
+                            if(Cond_Branch.getChildren().get(i).getNodeDetail().equals("else"))
+                            {
+                                index++;
+                                break;
+                            }
+                            else
+                            {
+                                index++;
+                            }
+                        }
+
+                        Node temp = new Node(-1, "Temp", "Temp");
+                        for(int i = index; i < Cond_Branch.getChildren().size(); i++)
+                        {
+                            temp.addChild(Cond_Branch.getChildren().get(i));
+                        }
+                        Cond_Branch.setChildren(temp.getChildren());
+                    }
+                }
+            }
+        }
+    }
+
+    private void analyseCond_LoopForDeadCode(Node Cond_Loop)
+    {
+        if(Cond_Loop != null)
+        {
+            Node child1 = Cond_Loop.getChildren().get(0);
+            if(child1.getNodeDetail().equals("while"))
+            {
+                Node child2 = Cond_Loop.getChildren().get(1);
+                if(child2.getChildren().get(0).getNodeDetail().equals("not"))
+                {
+                    Node Bool = child2.getChildren().get(1);
+                    if(Bool.getType().equals("f"))
+                    {
+                        this.warningMsg.addElement("Warning: Infinite Loop Detected.");
+                    }
+                }
+                else
+                {
+                    if(child2.getType().equals("f"))
+                    {
+                        Cond_Loop.setType("d");
+                    }
+                }
+            }
+            else
+            {
+                Node Bool = Cond_Loop.getChildren().get(2);
+                if(Bool.getChildren().get(0).getRowInTable().getNewName().equals(Bool.getChildren().get(2).getRowInTable().getNewName()))
+                {
+                    Cond_Loop.setType("d");
+                }
+            }
+        }
+    }
+
+    private void recursivelyAnalyseDeadCode(Node currNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getTypeOfNode().equals("Non-Terminal"))
+            {
+                boolean wholeBranchIsNotDead = false;
+                for(Node child: currNode.getChildren())
+                {
+                    if (!child.getType().equals("d"))
+                    {
+                        wholeBranchIsNotDead = true;
+                        break;
+                    }
+                }
+
+                if(!wholeBranchIsNotDead)
+                {
+                    currNode.setType("d");
+                }
+                else
+                {
+                    for(Node child: currNode.getChildren())
+                    {
+                        recursivelyAnalyseDeadCode(child);
+                    }
+
+                    wholeBranchIsNotDead = false;
+                    for(Node child: currNode.getChildren())
+                    {
+                        if (!child.getType().equals("d"))
+                        {
+                            wholeBranchIsNotDead = true;
+                            break;
+                        }
+                    }
+
+                    if(!wholeBranchIsNotDead)
+                    {
+                        currNode.setType("d");
+                    }
+                }
+            }
+        }
+    }
+
+    private void recursivelyRemoveDeadCode(Node newRoot, Node currNode)
+    {
+        if(currNode != null)
+        {
+            for(Node child: currNode.getChildren())
+            {
+                if(!child.getType().equals("d"))
+                {
+                    Node newNode = new Node(child);
+                    newRoot.addChild(newNode);
+                    recursivelyRemoveDeadCode(newNode, child);
+                }
             }
         }
     }
