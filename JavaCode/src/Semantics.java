@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 public class Semantics
@@ -5,6 +7,8 @@ public class Semantics
     private Node tree = null;
     private Vector<Row> Table;
     private static int variableNameNumber = 0;
+    private static int procedureNameNumber = 0;
+    private boolean isCallError = false;
 
     public Semantics(Node tree, Vector<Row> Table)
     {
@@ -25,10 +29,145 @@ public class Semantics
         return checkProcNamesInProcTreesAreDifferent(currNode, ProcNames);
     }
 
+    public boolean checkForLoopRule1()
+    {
+        Node currNode = this.tree;
+        return recursivelyCheckForLoopRule1(currNode);
+    }
+
+    public boolean checkForLoopRule2()
+    {
+        Node currNode = this.tree;
+        return recursivelyCheckForLoopRule2(currNode);
+    }
+
     public void changeTreeVariableNames()
     {
         Node currNode = tree;
         recursivelyIterateThroughTreeAndChangeVariableNames(currNode);
+    }
+
+    public void addLevels()
+    {
+        this.tree.addTreeLevelDescription();
+    }
+
+    public boolean changeTreeProcedureNames()
+    {
+        Node currNode = this.tree;
+        recursivelyIterateThroughTreeAndChangeProcedureNames(currNode);
+        currNode = this.tree;
+        recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(currNode);
+        return isCallError;
+    }
+
+    private boolean recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(Node currNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("INSTR") && currNode.getChildren().get(0).getNodeDetail().equals("CALL"))
+            {
+                Node child = currNode.getChildren().get(0);
+                if(child.getChildren().get(0).getRowInTable().getNewName().equals(""))
+                {
+                    isCallError = true;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else if(currNode.getNodeDetail().equals("PROC_DEFS"))
+            {
+                Node proc = currNode.getChildren().get(0);
+                if(proc.getChildren().get(1).getRowInTable().getNewName().equals(""))
+                {
+                    return true;
+                }
+                else
+                {
+                    return recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(proc.getChildren().get(2));
+                }
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    if(recursivelyIterateAndRemoveUnusedProcedureCallsAndDefs(currNode.getChildren().get(i)))
+                    {
+                        currNode.getChildren().remove(i);
+                        i--;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void recursivelyIterateThroughTreeAndChangeProcedureNames(Node currNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("CALL"))
+            {
+                findMatchingProcedure(currNode.getChildren().get(0));
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    recursivelyIterateThroughTreeAndChangeProcedureNames(currNode.getChildren().get(i));
+                }
+            }
+        }
+    }
+
+    private void findMatchingProcedure(Node callNode)
+    {
+        Node currNode = this.tree;
+        recursivelyIterateToFindMatchingProcedure(currNode, callNode);
+    }
+
+    private void recursivelyIterateToFindMatchingProcedure(Node currNode, Node callNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("PROC"))
+            {
+                if(currNode.getChildren().get(1).getNodeDetail().equals(callNode.getNodeDetail()))
+                {
+                    if((callNode.getLevel() == currNode.getLevel()) || (callNode.getLevel() + 1 == currNode.getLevel()))
+                    {
+                        if(currNode.getChildren().get(1).getRowInTable().getNewName().equals(""))
+                        {
+                            currNode.getChildren().get(1).getRowInTable().setNewName("p" + procedureNameNumber);
+                            callNode.getRowInTable().setNewName("p" + procedureNameNumber);
+                            procedureNameNumber++;
+                        }
+                        else
+                        {
+                            callNode.getRowInTable().setNewName(currNode.getChildren().get(1).getRowInTable().getNewName());
+                        }
+                    }
+                    else
+                    {
+                        recursivelyIterateToFindMatchingProcedure(currNode.getChildren().get(2), callNode);
+                    }
+                }
+                else
+                {
+                    recursivelyIterateToFindMatchingProcedure(currNode.getChildren().get(2), callNode);
+                }
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    recursivelyIterateToFindMatchingProcedure(currNode.getChildren().get(i), callNode);
+                }
+            }
+        }
     }
 
     private void recursivelyIterateThroughTreeAndChangeVariableNames(Node currNode)
@@ -240,5 +379,117 @@ public class Semantics
             }
         }
         return false;
+    }
+
+    private boolean recursivelyCheckForLoopRule1(Node currNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("COND_LOOP") && currNode.getChildren().get(0).getNodeDetail().equals("for"))
+            {
+                Node child1 = currNode.getChildren().get(1);
+                Node child2 = currNode.getChildren().get(2);
+                Node child3 = currNode.getChildren().get(3);
+                Node child3child = child3.getChildren().get(1);
+                Node child4 = currNode.getChildren().get(4);
+
+                String loopVarName = child1.getChildren().get(0).getRowInTable().getNewName();
+
+                if(child2.getChildren().get(0).getRowInTable().getNewName().equals(loopVarName) &&
+                        child3.getChildren().get(0).getRowInTable().getNewName().equals(loopVarName) &&
+                        child3child.getChildren().get(1).getRowInTable().getNewName().equals(loopVarName))
+                {
+                    for(int i = 4; i < currNode.getChildren().size(); i++)
+                    {
+                        if(recursivelyCheckForLoopRule1(currNode.getChildren().get(i)))
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    if(recursivelyCheckForLoopRule1(currNode.getChildren().get(i)))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private boolean recursivelyCheckForLoopRule2(Node currNode)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getNodeDetail().equals("COND_LOOP") && currNode.getChildren().get(0).getNodeDetail().equals("for"))
+            {
+                Node child1 = currNode.getChildren().get(1);
+                String loopVarName = child1.getChildren().get(0).getRowInTable().getNewName();
+
+                for(int i = 4; i < currNode.getChildren().size(); i++)
+                {
+                    if(recursivelyCheckLoopBranchForVar(currNode.getChildren().get(i), loopVarName))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    if(recursivelyCheckForLoopRule2(currNode.getChildren().get(i)))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private boolean recursivelyCheckLoopBranchForVar(Node currNode, String var)
+    {
+        if(currNode != null)
+        {
+            if(currNode.getRowInTable().getNewName().equals(var))
+            {
+                return true;
+            }
+            else
+            {
+                for(int i = 0; i < currNode.getChildren().size(); i++)
+                {
+                    if(recursivelyCheckLoopBranchForVar(currNode.getChildren().get(i), var))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
 }

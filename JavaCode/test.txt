@@ -1,13 +1,45 @@
-n = m;
+n = add(mult(2,2), 1);
+s = "hello";
+if(eq(s,n))
+then{
+    output(x)
+};
+if(not(x<n))
+then{
+    output(x)
+}
+else{
+    output(n)
+};
+if(or((x<n),(x<n)))
+then{
+    output(x)
+}
+else{
+    output(n)
+};
+while(not eq(s,n))
+{
+    input(n)
+};
 checknumber;
+scope;
+input(n);
+output(n);
 halt;
 proc checknumber
 {
     m = x;
     newscope = x;
+    scope;
     for(newscope=0;newscope<newscope;newscope=add(newscope,1))
     {
-        n=newscope
+        n=test;
+        scope;
+        for(x=0;x<n;x=add(x,1))
+        {
+            he = "hello"
+        }
     };
     proc scope
     {

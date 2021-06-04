@@ -8,12 +8,24 @@ public class Node
     private Row rowInTable = null;
     private Vector<Node> children = new Vector<>();
     private static int scopeValue = 0;
+    private String type = "";
+    private int level;
 
     public Node(int uid, String typeOfNode, String nodeDetail)
     {
         this.uid = uid;
         this.typeOfNode = typeOfNode;
         NodeDetail = nodeDetail;
+    }
+
+    public Node(Node oldNode)
+    {
+        this.uid = oldNode.uid;
+        this.typeOfNode = oldNode.getTypeOfNode();
+        this.NodeDetail = oldNode.getNodeDetail();
+        this.rowInTable = oldNode.getRowInTable();
+        this.type = oldNode.getType();
+        this.level = oldNode.getLevel();
     }
 
     public int getUid()
@@ -71,6 +83,26 @@ public class Node
         this.rowInTable = rowInTable;
     }
 
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String type)
+    {
+        this.type = type;
+    }
+
+    public int getLevel()
+    {
+        return level;
+    }
+
+    public void setLevel(int level)
+    {
+        this.level = level;
+    }
+
     public String printTree()
     {
         if(this.rowInTable == null)
@@ -84,6 +116,11 @@ public class Node
         return result;
     }
 
+    public void addTreeLevelDescription()
+    {
+        recursivelyAddTreeLevelDescription(0);
+    }
+
     private String printTreeRecursively(String result, int numIndentations)
     {
         if(this.typeOfNode.equals("Non-Terminal"))
@@ -92,7 +129,7 @@ public class Node
             {
                 result += "\t";
             }
-            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "\n";
+            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() +  "-" + this.getType() + "\n";
             for(int i = 0; i < numIndentations; i++)
             {
                 result += "\t";
@@ -116,7 +153,7 @@ public class Node
             {
                 result += "\t";
             }
-            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "\n";
+            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName()  + "\n";
         }
         return result;
     }
@@ -142,7 +179,7 @@ public class Node
             {
                 result += "";
             }
-            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText();
+            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() +  "-" + this.getType() + " ";
             for(int i = 0; i < numIndentations; i++)
             {
                 result += "";
@@ -166,7 +203,7 @@ public class Node
             {
                 result += "";
             }
-            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + " ";
+            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "  ";
         }
         return result;
     }
@@ -220,5 +257,22 @@ public class Node
         }
 
         return Table;
+    }
+
+    private void recursivelyAddTreeLevelDescription(int previousLevel)
+    {
+        if(this.NodeDetail.equals("PROC"))
+        {
+            this.level = previousLevel + 1;
+        }
+        else
+        {
+            this.level = previousLevel;
+        }
+
+        for(Node child: this.children)
+        {
+            child.recursivelyAddTreeLevelDescription(this.level);
+        }
     }
 }
