@@ -57,8 +57,8 @@ public class Main
                         {
                             output += warning + "   ";
                         }
-                        //output += tree.printTree();
-                        output += tree.printTreeWithNoNewLines();
+                        output += tree.printTree();
+                        //output += tree.printTreeWithNoNewLines();
                         System.out.println(output);
                     }
                     else
@@ -68,8 +68,8 @@ public class Main
                         {
                             output += err + "   ";
                         }
-                        //output += tree.printTree();
-                        output += tree.printTreeWithNoNewLines();
+                        output += tree.printTree();
+                        //output += tree.printTreeWithNoNewLines();
                         System.out.println(output);
                     }
                     //System.out.print(tree.printTreeWithNoNewLines());
