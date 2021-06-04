@@ -1,18 +1,8 @@
-n = 8;
-s = "hello";
-input(n);
-if(eq(n,0))
-then{
-    input(n);
-}
-else{
-    output(s);
+x = 3;
+t = 4;
+while(eq(x,t))
+{
+    z = x;
 };
 
-for(n = 0; n < yes; n=add(n,1))
-{
-    if(not(no < yes))
-    then{
-        s = "y"
-    }
-}
+y=t

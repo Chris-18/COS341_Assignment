@@ -106,7 +106,7 @@ public class Node
 
     public String getFlow()
     {
-        return this.flow;
+        return flow;
     }
 
     public void setFlow(String flow)
@@ -140,7 +140,7 @@ public class Node
             {
                 result += "\t";
             }
-            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() +  "-" + this.getType() + "\n";
+            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() +  "-" + this.getType() + "-Flow: " + this.flow + "\n";
             for(int i = 0; i < numIndentations; i++)
             {
                 result += "\t";
@@ -164,7 +164,7 @@ public class Node
             {
                 result += "\t";
             }
-            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName()  + "\n";
+            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "-Flow: " + this.flow +  "\n";
         }
         return result;
     }
@@ -190,7 +190,7 @@ public class Node
             {
                 result += "";
             }
-            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() +  "-" + this.getType() + " ";
+            result += this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() +  "-" + this.getType()  + "-Flow: " + this.flow + " ";
             for(int i = 0; i < numIndentations; i++)
             {
                 result += "";
@@ -214,7 +214,7 @@ public class Node
             {
                 result += "";
             }
-            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName() + "  ";
+            result += "Terminal Node: " + this.rowInTable.getScope() + "-" + this.rowInTable.getUid() + "-" + this.rowInTable.getNodeText() + "-" + this.rowInTable.getNewName()  + "-Flow: " + this.flow +  "  ";
         }
         return result;
     }

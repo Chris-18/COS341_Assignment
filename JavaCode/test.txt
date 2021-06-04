@@ -3,7 +3,6 @@ s = "hello";
 if(eq(s,n))
 then{
     output(x);
-    n = 5
 };
 if(not(x<n))
 then{

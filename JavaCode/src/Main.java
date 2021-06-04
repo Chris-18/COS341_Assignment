@@ -4,7 +4,7 @@ public class Main
 {
     public static void main(String[] args)
     {
-        Lexer lexer = new Lexer("test.txt");
+        Lexer lexer = new Lexer("Accept_0.txt");
         Token result = lexer.lex();
         if(result.getType().equals("Lexical Error") || result.getType().equals("File Error"))
         {
@@ -52,14 +52,30 @@ public class Main
                     tree = typeCheckResult.getTree();
                     if(!typeCheckResult.isError())
                     {
-                        String output = "";
-                        for(String warning: typeCheckResult.getWarningMsgs())
+                        ValueFlow valueFlow = new ValueFlow(tree, typeChecker.getSymbolTable());
+                        if(valueFlow.analyseValueFlow())
                         {
-                            output += warning + "   ";
+                            String output = "";
+                            for(String warning: typeCheckResult.getWarningMsgs())
+                            {
+                                output += warning + "   ";
+                            }
+                            //output += tree.printTree();
+                            output += tree.printTreeWithNoNewLines();
+                            System.out.println(output);
                         }
-                        output += tree.printTree();
-                        //output += tree.printTreeWithNoNewLines();
-                        System.out.println(output);
+                        else
+                        {
+                            String output = "";
+                            output += valueFlow.getFlowErrorMsg() + "    ";
+                            for(String warning: typeCheckResult.getWarningMsgs())
+                            {
+                                output += warning + "   ";
+                            }
+                            //output += tree.printTree();
+                            output += tree.printTreeWithNoNewLines();
+                            System.out.println(output);
+                        }
                     }
                     else
                     {

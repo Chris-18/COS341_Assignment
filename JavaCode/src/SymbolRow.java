@@ -2,11 +2,19 @@ public class SymbolRow
 {
     private String variableName;
     private String type;
+    private String flow = "-";
 
     public SymbolRow(String variableName, String type)
     {
         this.variableName = variableName;
         this.type = type;
+    }
+
+    public SymbolRow(SymbolRow symbolRow)
+    {
+        this.variableName = symbolRow.getVariableName();
+        this.type = symbolRow.getType();
+        this.flow = symbolRow.getFlow();
     }
 
     public String getVariableName()
@@ -27,5 +35,15 @@ public class SymbolRow
     public void setType(String type)
     {
         this.type = type;
+    }
+
+    public String getFlow()
+    {
+        return this.flow;
+    }
+
+    public void setFlow(String flow)
+    {
+        this.flow = flow;
     }
 }

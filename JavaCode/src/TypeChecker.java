@@ -31,6 +31,11 @@ public class TypeChecker
         }
     }
 
+    public Vector<SymbolRow> getSymbolTable()
+    {
+        return symbolTable;
+    }
+
     private void buildSymbolTable()
     {
         for(Row row: syntaxTable)
@@ -460,8 +465,17 @@ public class TypeChecker
     {
         if(Cond_Branch != null)
         {
-            int size = Cond_Branch.getChildren().size();
-            if(size == 4)
+            boolean hasElse = false;
+            for(Node child: Cond_Branch.getChildren())
+            {
+                if(child.getNodeDetail().equals("else"))
+                {
+                    hasElse = true;
+                    break;
+                }
+            }
+
+            if(!hasElse)
             {
                 Node child2 = Cond_Branch.getChildren().get(1);
                 Node child4 = Cond_Branch.getChildren().get(3);
@@ -483,7 +497,7 @@ public class TypeChecker
                     }
                 }
             }
-            else if(size == 6)
+            else
             {
                 Node child2 = Cond_Branch.getChildren().get(1);
                 Node child4 = Cond_Branch.getChildren().get(3);
