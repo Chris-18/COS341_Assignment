@@ -2,7 +2,8 @@ n = add(mult(2,2), 1);
 s = "hello";
 if(eq(s,n))
 then{
-    output(x)
+    output(x);
+    n = 5
 };
 if(not(x<n))
 then{
