@@ -10,6 +10,7 @@ public class Node
     private static int scopeValue = 0;
     private String type = "";
     private int level;
+    private String flow = "-";
 
     public Node(int uid, String typeOfNode, String nodeDetail)
     {
@@ -101,6 +102,16 @@ public class Node
     public void setLevel(int level)
     {
         this.level = level;
+    }
+
+    public String getFlow()
+    {
+        return this.flow;
+    }
+
+    public void setFlow(String flow)
+    {
+        this.flow = flow;
     }
 
     public String printTree()
