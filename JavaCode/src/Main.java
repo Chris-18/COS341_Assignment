@@ -63,6 +63,11 @@ public class Main
                             output += tree.printTree();
                             //output += tree.printTreeWithNoNewLines();
                             System.out.println(output);
+
+                            System.out.println();
+                            System.out.println();
+                            CodeGeneration codeGeneration = new CodeGeneration(tree);
+                            codeGeneration.generateCode();
                         }
                         else
                         {

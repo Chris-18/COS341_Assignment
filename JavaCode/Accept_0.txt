@@ -1,8 +1,27 @@
-x = 3;
-t = 4;
-while(eq(x,t))
+n = 0;
+t = 10;
+
+while((n < t))
 {
-    z = x;
+    testproc;
+    output(n);
+    n = add(n,1);
+    proc testproc
+    {
+        test = "test";
+        output(test);
+    }
 };
 
-y=t
+double;
+
+proc double
+{
+    n = 0;
+    while((n < t))
+    {
+        d = mult(n, 2);
+        output(d);
+        n = add(n,1)
+    };
+}
