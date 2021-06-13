@@ -6,6 +6,7 @@ public class CodeGeneration
     private final Vector<VariableRow> variableTable = new Vector<>();
     private static int lineNo = 10;
     private static int labelNo = 0;
+    private static String generatedProcCode = "";
 
     public CodeGeneration(Node tree)
     {
@@ -14,7 +15,7 @@ public class CodeGeneration
 
     public void generateCode()
     {
-        String phaseOne = generateProg(this.tree);
+        String phaseOne = generateProg(this.tree) + generatedProcCode;
         System.out.println(phaseOne);
         System.out.println();
         System.out.println();
@@ -201,7 +202,7 @@ public class CodeGeneration
             Node ioType = IO.getChildren().get(0);
             if(ioType.getNodeDetail().equals("input"))
             {
-                generatedCode += getLineNo() + " INPUT " + IO.getChildren().get(1).getRowInTable().getNewName();
+                generatedCode += getLineNo() + " INPUT \"\"; " + IO.getChildren().get(1).getRowInTable().getNewName();
                 for(VariableRow variableRow: variableTable)
                 {
                     if(!variableRow.getVariableName().equals(IO.getChildren().get(1).getRowInTable().getNewName()))
@@ -359,7 +360,14 @@ public class CodeGeneration
                     }
                     else
                     {
-                        generatedCode += generateInstr(Cond_Branch.getChildren().get(i)) + "\n";
+                        if(Cond_Branch.getChildren().get(i).getNodeDetail().equals("INSTR"))
+                        {
+                            generatedCode += generateInstr(Cond_Branch.getChildren().get(i)) + "\n";
+                        }
+                        else if(Cond_Branch.getChildren().get(i).getNodeDetail().equals("PROC_DEFS"))
+                        {
+                            generatedProcCode += generateProcDef(Cond_Branch.getChildren().get(i)) + "\n";
+                        }
                     }
                 }
                 generatedCode += getLineNo() + " GOTO " + endLabel + "\n";
@@ -367,7 +375,14 @@ public class CodeGeneration
                 generatedCode += "*" + getLineNo() + " " + falseLabel + "\n";
                 for(int i = elsePos + 1; i < Cond_Branch.getChildren().size();i++)
                 {
-                    generatedCode += generateInstr(Cond_Branch.getChildren().get(i)) + "\n";
+                    if(Cond_Branch.getChildren().get(i).getNodeDetail().equals("INSTR"))
+                    {
+                        generatedCode += generateInstr(Cond_Branch.getChildren().get(i)) + "\n";
+                    }
+                    else if(Cond_Branch.getChildren().get(i).getNodeDetail().equals("PROC_DEFS"))
+                    {
+                        generatedProcCode += generateProcDef(Cond_Branch.getChildren().get(i)) + "\n";
+                    }
                 }
                 generatedCode += "*" + getLineNo() + " " + endLabel;
             }
@@ -379,7 +394,14 @@ public class CodeGeneration
                 generatedCode += "*" + getLineNo() + " " + trueLabel + "\n";
                 for(int i = 3; i < Cond_Branch.getChildren().size(); i++)
                 {
-                    generatedCode += generateInstr(Cond_Branch.getChildren().get(i)) + "\n";
+                    if(Cond_Branch.getChildren().get(i).getNodeDetail().equals("INSTR"))
+                    {
+                        generatedCode += generateInstr(Cond_Branch.getChildren().get(i)) + "\n";
+                    }
+                    else if(Cond_Branch.getChildren().get(i).getNodeDetail().equals("PROC_DEFS"))
+                    {
+                        generatedProcCode += generateProcDef(Cond_Branch.getChildren().get(i)) + "\n";
+                    }
                 }
                 generatedCode += "*" + getLineNo() + " " + falseLabel;
             }
@@ -410,7 +432,7 @@ public class CodeGeneration
                     }
                     else if(Cond_Loop.getChildren().get(i).getNodeDetail().equals("PROC_DEFS"))
                     {
-                        generatedCode += generateProcDef(Cond_Loop.getChildren().get(i)) + "\n";
+                        generatedProcCode += generateProcDef(Cond_Loop.getChildren().get(i)) + "\n";
                     }
                 }
             }
@@ -424,7 +446,14 @@ public class CodeGeneration
 
                 for(int i = 4; i < Cond_Loop.getChildren().size(); i++)
                 {
-                    generatedCode += generateInstr(Cond_Loop.getChildren().get(i)) + "\n";
+                    if(Cond_Loop.getChildren().get(i).getNodeDetail().equals("INSTR"))
+                    {
+                        generatedCode += generateInstr(Cond_Loop.getChildren().get(i)) + "\n";
+                    }
+                    else if(Cond_Loop.getChildren().get(i).getNodeDetail().equals("PROC_DEFS"))
+                    {
+                        generatedProcCode += generateProcDef(Cond_Loop.getChildren().get(i)) + "\n";
+                    }
                 }
 
                 generatedCode += generateAssign(Cond_Loop.getChildren().get(3)) + "\n";
